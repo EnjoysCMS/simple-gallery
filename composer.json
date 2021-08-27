@@ -5,7 +5,7 @@
   "type": "enjoyscms-module",
   "autoload": {
     "psr-4": {
-      "EnjoysCMS\\SimpleGallery\\": "src/"
+      "EnjoysCMS\\Module\\SimpleGallery\\": "src/"
     }
   },
   "authors": [
