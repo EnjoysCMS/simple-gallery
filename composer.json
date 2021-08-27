@@ -1,19 +1,23 @@
 {
-    "name": "enjoyscms/simple-gallery",
-    "description": "Простая галерея без группировок по альбомам",
-    "license": "MIT",
-    "autoload": {
-        "psr-4": {
-            "EnjoysCMS\\SimpleGallery\\": "src/"
-        }
-    },
-    "authors": [
-        {
-            "name": "Enjoys",
-            "email": "deadly.info@gmail.com"
-        }
-    ],
-    "require": {
-        "php": ">= 8.0"
+  "name": "enjoyscms/simple-gallery",
+  "description": "Простая галерея без группировок по альбомам",
+  "license": "MIT",
+  "type": "enjoyscms-module",
+  "autoload": {
+    "psr-4": {
+      "EnjoysCMS\\SimpleGallery\\": "src/"
     }
+  },
+  "authors": [
+    {
+      "name": "Enjoys",
+      "email": "deadly.info@gmail.com"
+    }
+  ],
+  "require": {
+    "php": ">= 8.0"
+  },
+  "extra": {
+    "module-name": "Галерея"
+  }
 }
