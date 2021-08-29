@@ -1,0 +1,11 @@
+{
+  "name": "simple-gallery",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/EnjoysCMS/simple-gallery.git",
+  "author": "enjoys <deadly.info@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "dropzone": "^5.9.2"
+  }
+}
