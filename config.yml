@@ -1,0 +1,2 @@
+uploadStorage: \EnjoysCMS\Module\SimpleGallery\Admin\UploadStorage\FileSystem
+uploadDir: /gallery #relative env upload_dir

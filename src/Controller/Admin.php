@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityManager;
 use Enjoys\Forms\Renderer\RendererInterface;
 use Enjoys\Http\ServerRequestInterface;
 use EnjoysCMS\Module\SimpleGallery\Admin\Index;
+use EnjoysCMS\Module\SimpleGallery\Admin\Upload;
 use EnjoysCMS\Module\SimpleGallery\Config;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\Routing\Annotation\Route;
@@ -40,6 +41,21 @@ final class Admin extends BaseController
         return $this->view(
             '@simple-gallery/admin/index.twig',
             $this->getContext($container->get(Index::class))
+        );
+    }
+
+    #[Route(
+        path: '/admin/gallery/upload',
+        name: 'admin/gallery/upload',
+        options: [
+            'aclComment' => '[Admin][Simple Gallery] Загрузка изображений'
+        ]
+    )]
+    public function upload(ContainerInterface $container)
+    {
+        return $this->view(
+            '@simple-gallery/admin/upload.twig',
+            $this->getContext($container->get(Upload::class))
         );
     }
 }
