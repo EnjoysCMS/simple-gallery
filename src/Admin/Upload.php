@@ -85,7 +85,7 @@ final class Upload implements ModelInterface
         $storage = $this->config->get('uploadStorage');
 
 
-        /** @var UploadFileStorage $upload */
+        /** @var UploadFileStorage $fileStorage */
         $fileStorage = new $storage(
             $_ENV['UPLOAD_DIR'] . '/' . trim($this->config->get('uploadDir'), '/\\') . '/' . $this->getUploadSubDir()
         );
