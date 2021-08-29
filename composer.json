@@ -23,5 +23,8 @@
     "admin-links": {
       "admin/gallery": "Обзор (Список)"
     }
+  },
+  "scripts": {
+    "assets-install": "cd ./modules/simple-gallery && yarn install"
   }
 }
