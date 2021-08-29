@@ -18,6 +18,9 @@
     "php": ">= 8.0"
   },
   "extra": {
-    "module-name": "Галерея"
+    "module-name": "Галерея",
+    "admin-links": {
+      "admin/gallery": "Обзор (Список)"
+    }
   }
 }

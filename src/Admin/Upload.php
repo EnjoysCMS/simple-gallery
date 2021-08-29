@@ -10,6 +10,7 @@ use App\Module\Admin\Core\ModelInterface;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
+use Enjoys\Forms\Elements\File;
 use Enjoys\Forms\Exception\ExceptionRule;
 use Enjoys\Forms\Form;
 use Enjoys\Forms\Renderer\Bootstrap4\Bootstrap4;
@@ -40,7 +41,13 @@ final class Upload implements ModelInterface
         $form = $this->getForm();
 
         if ($form->isSubmitted()) {
-            $this->doAction();
+            try {
+                $this->doAction();
+            } catch (\Exception $e) {
+                /** @var File $image */
+                $image = $form->getElement('image');
+                $image->setRuleError($e->getMessage());
+            }
         }
 
         $renderer = new Bootstrap4([], $form);
@@ -75,6 +82,7 @@ final class Upload implements ModelInterface
     /**
      * @throws OptimisticLockException
      * @throws ORMException
+     * @throws \Exception
      */
     private function doAction()
     {
@@ -91,11 +99,17 @@ final class Upload implements ModelInterface
         );
         $fileStorage->upload($file, $this->getNewFilename());
 
+        $hash = md5_file($fileStorage->getTargetPath());
+
+        if(null !== $this->em->getRepository(Image::class)->findOneBy(['hash' => $hash]))
+        {
+            throw new \Exception('Такое изображение уже есть');
+        }
 
         $image = new Image();
         $image->setOriginalName($file->getClientFilename());
         $image->setPath($this->getUploadSubDir() .'/'.$fileStorage->getFilename());
-        $image->setHash(md5_file($fileStorage->getTargetPath()));
+        $image->setHash($hash);
         $image->setFileName($fileStorage->getFilename());
 
 
