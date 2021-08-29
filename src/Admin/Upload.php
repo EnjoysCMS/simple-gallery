@@ -21,14 +21,19 @@ use EnjoysCMS\Core\Components\Modules\ModuleConfig;
 use EnjoysCMS\Module\SimpleGallery\Config;
 use EnjoysCMS\Module\SimpleGallery\Entities\Image;
 use EnjoysCMS\Module\SimpleGallery\UploadFileStorage;
+use Intervention\Image\ImageManagerStatic;
 use Psr\Http\Message\UploadedFileInterface;
+
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+
+use function Enjoys\FileSystem\createDirectory;
 
 final class Upload implements ModelInterface
 {
 
     private ModuleConfig $config;
 
-    public function __construct(private ServerRequestInterface $serverRequest, private EntityManager $em)
+    public function __construct(private ServerRequestInterface $serverRequest, private EntityManager $em, private UrlGeneratorInterface $urlGenerator)
     {
         $this->config = Config::getConfig();
     }
@@ -101,14 +106,13 @@ final class Upload implements ModelInterface
 
         $hash = md5_file($fileStorage->getTargetPath());
 
-        if(null !== $this->em->getRepository(Image::class)->findOneBy(['hash' => $hash]))
-        {
+        if (null !== $this->em->getRepository(Image::class)->findOneBy(['hash' => $hash])) {
             throw new \Exception('Такое изображение уже есть');
         }
 
         $image = new Image();
         $image->setOriginalName($file->getClientFilename());
-        $image->setPath($this->getUploadSubDir() .'/'.$fileStorage->getFilename());
+        $image->setPath($this->getUploadSubDir() . '/' . $fileStorage->getFilename());
         $image->setHash($hash);
         $image->setFileName($fileStorage->getFilename());
 
@@ -116,20 +120,45 @@ final class Upload implements ModelInterface
         try {
             $this->em->persist($image);
             $this->em->flush();
+
+            $this->createThumbnail($fileStorage->getTargetPath());
+
         } catch (\Exception $e) {
-            unlink($fileStorage->getTargetPath());
+            if (file_exists($fileStorage->getTargetPath())) {
+                unlink($fileStorage->getTargetPath());
+            }
+
             throw $e;
         }
 
 
-        Redirect::http();
+        Redirect::http($this->urlGenerator->generate('admin/gallery'));
     }
 
+    /**
+     * @throws \Exception
+     */
+    private function createThumbnail(string $originalPath)
+    {
+        $file = pathinfo($originalPath);
+        $imgSmall = ImageManagerStatic::make($originalPath);
+        $imgSmall->resize(
+            300,
+            300,
+            function ($constraint) {
+                $constraint->aspectRatio();
+                $constraint->upsize();
+            }
+        );
+
+
+        $imgSmall->save($file['dirname']  . '/' .  $file['filename'] . '_thumb' . '.' . $file['extension']);
+    }
 
 
     private function getUploadSubDir(): string
     {
-        return  date('Y') . '/' . date('m');
+        return date('Y') . '/' . date('m');
     }
 
     private function getNewFilename(): ?string

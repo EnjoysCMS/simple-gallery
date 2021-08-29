@@ -100,4 +100,12 @@ final class Image
         $this->description = $description;
     }
 
+
+    public function getExtension(): string
+    {
+        return pathinfo($this->getFileName(), PATHINFO_EXTENSION);
+    }
+
+
+
 }

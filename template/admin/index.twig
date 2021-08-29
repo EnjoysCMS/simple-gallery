@@ -9,12 +9,16 @@
                 <h2 class="card-title">Галерея</h2>
             </div>
             <!-- /.card-header -->
-            <div class="card-body row">
-                {% for image in images %}
-                    <div class="col-md-3">
-                        <img class="img img-thumbnail" src="{{ _ENV['UPLOAD_URL'] ~ config.get('uploadDir') ~ '/' ~ image.getPath }}">
-                    </div>
-                {% endfor %}
+            <div class="card-body">
+                <a href="{{ path('admin/gallery/upload') }}">Загрузить с компьютера</a>
+                <div class="row">
+                    {% for image in images %}
+                        <div class="col-md-3">
+                            <img class="img img-thumbnail"
+                                 src="{{ _ENV['UPLOAD_URL'] ~ config.get('uploadDir') ~ '/' ~ image.getPath|replace({'.': '_thumb.'}) }}">
+                        </div>
+                    {% endfor %}
+                </div>
             </div>
             <!-- /.card-body -->
         </div>
