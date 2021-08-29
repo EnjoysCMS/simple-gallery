@@ -9,8 +9,12 @@
                 <h2 class="card-title">Галерея</h2>
             </div>
             <!-- /.card-header -->
-            <div class="card-body">
-                {{ dump(images) }}
+            <div class="card-body row">
+                {% for image in images %}
+                    <div class="col-md-3">
+                        <img class="img img-thumbnail" src="{{ _ENV['UPLOAD_URL'] ~ config.get('uploadDir') ~ '/' ~ image.getPath }}">
+                    </div>
+                {% endfor %}
             </div>
             <!-- /.card-body -->
         </div>
