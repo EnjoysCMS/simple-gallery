@@ -107,28 +107,22 @@ final class Upload implements ModelInterface
 
         $hash = md5_file($fileStorage->getTargetPath());
 
-        if (null !== $this->em->getRepository(Image::class)->findOneBy(['hash' => $hash])) {
-            throw new \Exception('Такое изображение уже есть');
-        }
-
-        $image = new Image();
-        $image->setDescription(pathinfo($file->getClientFilename(), PATHINFO_FILENAME));
-        $image->setFilename(str_replace($uploadDirectory, '', $fileStorage->getTargetPath()));
-        $image->setHash($hash);
-
+        $imageDto = new ImageDto(
+            str_replace($uploadDirectory, '', $fileStorage->getTargetPath()),
+            $hash,
+            pathinfo($file->getClientFilename(), PATHINFO_FILENAME)
+        );
 
         try {
-            $this->em->persist($image);
-            $this->em->flush();
-
+            new WriteImage($this->em, $imageDto);
             $this->createThumbnail($fileStorage->getTargetPath());
         } catch (\Exception $e) {
             if (file_exists($fileStorage->getTargetPath())) {
                 unlink($fileStorage->getTargetPath());
             }
-
             throw $e;
         }
+
 
 
         Redirect::http($this->urlGenerator->generate('admin/gallery'));
