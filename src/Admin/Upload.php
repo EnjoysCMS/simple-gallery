@@ -115,7 +115,7 @@ final class Upload implements ModelInterface
 
         try {
             new WriteImage($this->em, $imageDto);
-            $this->createThumbnail($fileStorage->getTargetPath());
+            Thumbnail::create($fileStorage->getTargetPath());
         } catch (\Exception $e) {
             if (file_exists($fileStorage->getTargetPath())) {
                 unlink($fileStorage->getTargetPath());
@@ -128,25 +128,7 @@ final class Upload implements ModelInterface
         Redirect::http($this->urlGenerator->generate('admin/gallery'));
     }
 
-    /**
-     * @throws \Exception
-     */
-    private function createThumbnail(string $originalPath)
-    {
-        $file = pathinfo($originalPath);
-        $imgSmall = ImageManagerStatic::make($originalPath);
-        $imgSmall->resize(
-            300,
-            300,
-            function ($constraint) {
-                $constraint->aspectRatio();
-                $constraint->upsize();
-            }
-        );
 
-
-        $imgSmall->save($file['dirname'] . '/' . $file['filename'] . '_thumb' . '.' . $file['extension']);
-    }
 
 
     private function getUploadSubDir(): string
