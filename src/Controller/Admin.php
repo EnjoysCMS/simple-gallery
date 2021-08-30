@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityManager;
 use Enjoys\Forms\Renderer\RendererInterface;
 use Enjoys\Http\ServerRequestInterface;
 use EnjoysCMS\Module\SimpleGallery\Admin\Delete;
+use EnjoysCMS\Module\SimpleGallery\Admin\Download;
 use EnjoysCMS\Module\SimpleGallery\Admin\Index;
 use EnjoysCMS\Module\SimpleGallery\Admin\Upload;
 use EnjoysCMS\Module\SimpleGallery\Config;
@@ -37,7 +38,7 @@ final class Admin extends BaseController
             'aclComment' => '[Admin][Simple Gallery] Просмотр всех изображений'
         ]
     )]
-    public function index(ContainerInterface $container)
+    public function index(ContainerInterface $container): string
     {
         return $this->view(
             '@simple-gallery/admin/index.twig',
@@ -52,11 +53,26 @@ final class Admin extends BaseController
             'aclComment' => '[Admin][Simple Gallery] Загрузка изображений'
         ]
     )]
-    public function upload(ContainerInterface $container)
+    public function upload(ContainerInterface $container): string
     {
         return $this->view(
             '@simple-gallery/admin/upload.twig',
             $this->getContext($container->get(Upload::class))
+        );
+    }
+
+    #[Route(
+        path: '/admin/gallery/download',
+        name: 'admin/gallery/download',
+        options: [
+            'aclComment' => '[Admin][Simple Gallery] Загрузка изображений из интернета'
+        ]
+    )]
+    public function download(ContainerInterface $container): string
+    {
+        return $this->view(
+            '@simple-gallery/admin/upload.twig',
+            $this->getContext($container->get(Download::class))
         );
     }
 
@@ -67,7 +83,7 @@ final class Admin extends BaseController
             'aclComment' => '[Admin][Simple Gallery] Удаление изображений'
         ]
     )]
-    public function delete(ContainerInterface $container)
+    public function delete(ContainerInterface $container): string
     {
         return $this->view(
             '@simple-gallery/admin/delete.twig',

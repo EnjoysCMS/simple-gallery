@@ -10,7 +10,8 @@
             </div>
             <!-- /.card-header -->
             <div class="card-body">
-                <a href="{{ path('admin/gallery/upload') }}">Загрузить с компьютера</a>
+                <a class="btn" href="{{ path('admin/gallery/upload') }}">Загрузить с компьютера</a>
+                <a class="btn" href="{{ path('admin/gallery/download') }}">Загрузить из интернета</a>
                 <div class="row">
                     {% set uploadDir = _ENV['UPLOAD_URL'] ~ config.get('uploadDir') %}
                     {% for image in images %}
