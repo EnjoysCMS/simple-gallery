@@ -82,16 +82,20 @@ final class Delete implements ModelInterface
         $this->entityManager->remove($this->image);
         $this->entityManager->flush();
 
-        $imagePath = pathinfo(
-            realpath($_ENV['UPLOAD_DIR'] . $this->config->get('uploadDir') . $this->image->getFilename())
-        );
-        $images = glob(
-            $imagePath['dirname'] . DIRECTORY_SEPARATOR . $imagePath['filename'] . '*.' . $imagePath['extension']
-        );
+        try {
+            $imagePath = pathinfo(
+                realpath($_ENV['UPLOAD_DIR'] . $this->config->get('uploadDir') . $this->image->getFilename())
+            );
+            $images = glob(
+                $imagePath['dirname'] . DIRECTORY_SEPARATOR . $imagePath['filename'] . '*.' . $imagePath['extension']
+            );
 
-        foreach ($images as $image) {
-            unlink($image);
+            foreach ($images as $image) {
+                unlink($image);
+            }
+        } catch (\TypeError) {
         }
+
 
         Redirect::http($this->urlGenerator->generate('admin/gallery'));
     }
