@@ -11,12 +11,17 @@ use Enjoys\Http\ServerRequestInterface;
 use EnjoysCMS\Module\SimpleGallery\Admin\Delete;
 use EnjoysCMS\Module\SimpleGallery\Admin\Download;
 use EnjoysCMS\Module\SimpleGallery\Admin\Index;
+use EnjoysCMS\Module\SimpleGallery\Admin\UpdateDescription;
 use EnjoysCMS\Module\SimpleGallery\Admin\Upload;
 use EnjoysCMS\Module\SimpleGallery\Config;
+use HttpSoft\Emitter\EmitterInterface;
+use HttpSoft\Message\Response;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Twig\Environment;
+
+use function DI\get;
 
 final class Admin extends BaseController
 {
@@ -89,5 +94,43 @@ final class Admin extends BaseController
             '@simple-gallery/admin/delete.twig',
             $this->getContext($container->get(Delete::class))
         );
+    }
+
+    #[Route(
+        path: '/admin/gallery/update-description',
+        name: 'admin/gallery/updateDescription',
+        options: [
+            'aclComment' => '[Admin][Simple Gallery] Установка описания для изображений'
+        ]
+    )]
+    public function updateDescription(ContainerInterface $container)
+    {
+        /** @var Response $response */
+        $response = $container->get(Response::class);
+        /** @var EmitterInterface $emitter */
+        $emitter = $container->get(EmitterInterface::class);
+
+        try {
+            $container->get(UpdateDescription::class)->update();
+            $result = 'ok';
+            $code = 200;
+        } catch (\Exception $e) {
+            $code = 500;
+            $result = $e->getMessage();
+        } finally {
+            $response =
+                $response
+                    ->withStatus($code)
+                    ->withHeader(
+                        'Content-Type',
+                        'application/json',
+                    );
+
+            $response->getBody()->write(
+                json_encode($result)
+            );
+
+            $emitter->emit($response);
+        }
     }
 }
