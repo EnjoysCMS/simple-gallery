@@ -56,7 +56,7 @@ final class Image
     }
 
     /**
-     * @ORM\Column(type="text", nullable=true)
+     * @ORM\Column(type="string", length=50, nullable=true)
      */
     private ?string $description = null;
 
