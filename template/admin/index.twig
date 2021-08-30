@@ -15,10 +15,13 @@
                     {% set uploadDir = _ENV['UPLOAD_URL'] ~ config.get('uploadDir') %}
                     {% for image in images %}
                         <div class="col-md-3">
-                            <a href="{{ uploadDir ~ image.getFilePath }}">
+                            <a href="{{ uploadDir ~ image.getFilename }}">
                                 <img class="img img-thumbnail"
-                                     src="{{ uploadDir ~ image.getFilePath|replace({'.': '_thumb.'}) }}">
+                                     src="{{ uploadDir ~ image.getFilename|replace({'.': '_thumb.'}) }}">
                             </a>
+                            <div>
+                                {{ image.getDescription }}
+                            </div>
                         </div>
                     {% endfor %}
                 </div>

@@ -115,8 +115,8 @@ final class Upload implements ModelInterface
         }
 
         $image = new Image();
-        $image->setOriginalName($file->getClientFilename());
-        $image->setFilePath(str_replace($uploadDirectory, '', $fileStorage->getTargetPath()));
+        $image->setDescription(pathinfo($file->getClientFilename(), PATHINFO_FILENAME));
+        $image->setFilename(str_replace($uploadDirectory, '', $fileStorage->getTargetPath()));
         $image->setHash($hash);
 
 
