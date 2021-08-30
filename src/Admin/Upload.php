@@ -33,8 +33,11 @@ final class Upload implements ModelInterface
 
     private ModuleConfig $config;
 
-    public function __construct(private ServerRequestInterface $serverRequest, private EntityManager $em, private UrlGeneratorInterface $urlGenerator)
-    {
+    public function __construct(
+        private ServerRequestInterface $serverRequest,
+        private EntityManager $em,
+        private UrlGeneratorInterface $urlGenerator
+    ) {
         $this->config = Config::getConfig();
     }
 
@@ -99,8 +102,9 @@ final class Upload implements ModelInterface
 
 
         /** @var UploadFileStorage $fileStorage */
+        $uploadDirectory = $_ENV['UPLOAD_DIR'] . '/' . trim($this->config->get('uploadDir'), '/\\');
         $fileStorage = new $storage(
-            $_ENV['UPLOAD_DIR'] . '/' . trim($this->config->get('uploadDir'), '/\\') . '/' . $this->getUploadSubDir()
+            $uploadDirectory . '/' . $this->getUploadSubDir()
         );
         $fileStorage->upload($file, $this->getNewFilename());
 
@@ -112,9 +116,8 @@ final class Upload implements ModelInterface
 
         $image = new Image();
         $image->setOriginalName($file->getClientFilename());
-        $image->setPath($this->getUploadSubDir() . '/' . $fileStorage->getFilename());
+        $image->setFilePath(str_replace($uploadDirectory, '', $fileStorage->getTargetPath()));
         $image->setHash($hash);
-        $image->setFileName($fileStorage->getFilename());
 
 
         try {
@@ -122,7 +125,6 @@ final class Upload implements ModelInterface
             $this->em->flush();
 
             $this->createThumbnail($fileStorage->getTargetPath());
-
         } catch (\Exception $e) {
             if (file_exists($fileStorage->getTargetPath())) {
                 unlink($fileStorage->getTargetPath());
@@ -152,7 +154,7 @@ final class Upload implements ModelInterface
         );
 
 
-        $imgSmall->save($file['dirname']  . '/' .  $file['filename'] . '_thumb' . '.' . $file['extension']);
+        $imgSmall->save($file['dirname'] . '/' . $file['filename'] . '_thumb' . '.' . $file['extension']);
     }
 
 

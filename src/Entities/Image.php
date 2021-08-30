@@ -40,21 +40,6 @@ final class Image
     }
 
     /**
-     * @ORM\Column(type="string")
-     */
-    private string $fileName;
-
-    public function getFileName(): string
-    {
-        return $this->fileName;
-    }
-
-    public function setFileName(string $fileName): void
-    {
-        $this->fileName = $fileName;
-    }
-
-    /**
      * @ORM\Column(type="string", unique=true)
      */
     private string $hash;
@@ -72,16 +57,16 @@ final class Image
     /**
      * @ORM\Column(type="string")
      */
-    private string $path;
+    private string $filePath;
 
-    public function getPath(): string
+    public function getFilePath(): string
     {
-        return $this->path;
+        return $this->filePath;
     }
 
-    public function setPath(string $path): void
+    public function setFilePath(string $filePath): void
     {
-        $this->path = $path;
+        $this->filePath = $filePath;
     }
 
     /**

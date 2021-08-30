@@ -12,10 +12,13 @@
             <div class="card-body">
                 <a href="{{ path('admin/gallery/upload') }}">Загрузить с компьютера</a>
                 <div class="row">
+                    {% set uploadDir = _ENV['UPLOAD_URL'] ~ config.get('uploadDir') %}
                     {% for image in images %}
                         <div class="col-md-3">
-                            <img class="img img-thumbnail"
-                                 src="{{ _ENV['UPLOAD_URL'] ~ config.get('uploadDir') ~ '/' ~ image.getPath|replace({'.': '_thumb.'}) }}">
+                            <a href="{{ uploadDir ~ image.getFilePath }}">
+                                <img class="img img-thumbnail"
+                                     src="{{ uploadDir ~ image.getFilePath|replace({'.': '_thumb.'}) }}">
+                            </a>
                         </div>
                     {% endfor %}
                 </div>
