@@ -17,8 +17,11 @@
                         <div class="col-md-3">
                             <a href="{{ uploadDir ~ image.getFilename }}">
                                 <img class="img img-thumbnail"
-                                     src="{{ uploadDir ~ image.getFilename|replace({'.': '_thumb.'}) }}">
+                                     src="{{ uploadDir ~ image.getFilename|replace({'.': '_thumb.'}) }}" />
                             </a>
+                            <div>
+                                <a href="{{ path('admin/gallery/delete', {"id": image.getId}) }}">удалить</a>
+                            </div>
                             <div>
                                 {{ image.getDescription }}
                             </div>

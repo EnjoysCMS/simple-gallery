@@ -23,10 +23,7 @@ use EnjoysCMS\Module\SimpleGallery\Entities\Image;
 use EnjoysCMS\Module\SimpleGallery\UploadFileStorage;
 use Intervention\Image\ImageManagerStatic;
 use Psr\Http\Message\UploadedFileInterface;
-
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-
-use function Enjoys\FileSystem\createDirectory;
 
 final class Upload implements ModelInterface
 {

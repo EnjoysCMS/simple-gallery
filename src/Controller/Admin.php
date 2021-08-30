@@ -8,6 +8,7 @@ use App\Module\Admin\BaseController;
 use Doctrine\ORM\EntityManager;
 use Enjoys\Forms\Renderer\RendererInterface;
 use Enjoys\Http\ServerRequestInterface;
+use EnjoysCMS\Module\SimpleGallery\Admin\Delete;
 use EnjoysCMS\Module\SimpleGallery\Admin\Index;
 use EnjoysCMS\Module\SimpleGallery\Admin\Upload;
 use EnjoysCMS\Module\SimpleGallery\Config;
@@ -56,6 +57,21 @@ final class Admin extends BaseController
         return $this->view(
             '@simple-gallery/admin/upload.twig',
             $this->getContext($container->get(Upload::class))
+        );
+    }
+
+    #[Route(
+        path: '/admin/gallery/delete',
+        name: 'admin/gallery/delete',
+        options: [
+            'aclComment' => '[Admin][Simple Gallery] Удаление изображений'
+        ]
+    )]
+    public function delete(ContainerInterface $container)
+    {
+        return $this->view(
+            '@simple-gallery/admin/delete.twig',
+            $this->getContext($container->get(Delete::class))
         );
     }
 }
