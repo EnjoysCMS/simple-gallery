@@ -1,0 +1,20 @@
+EnjoysCMS\Module\SimpleGallery\Blocks\ViewPhoto:
+  name: Блок модуля галерея (simple-gallery)
+  options:
+    template:
+      value: '../modules/simple-gallery/template/block_sample.twig'
+      name: Путь до template
+      description: Обязательно
+    cntItems:
+      value: 3
+      name: Кол-во записей (изображений)
+      description: Какое кол-во записей выводить в блок
+    orderItems:
+      name: место получения данных
+      value: desc
+      form:
+        type: select
+        data:
+          asc: Первые старые
+          desc: Первые новые
+          random: В случайном порядке
