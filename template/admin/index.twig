@@ -6,7 +6,7 @@
             .forEach(function (item) {
                 item.addEventListener('blur', function (e) {
                     let body = {
-                        'comment': item.innerHTML,
+                        'comment': item.innerText,
                         'id': item.getAttribute('data-id')
                     }
                     fetch('{{ path('admin/gallery/updateDescription') }}', {

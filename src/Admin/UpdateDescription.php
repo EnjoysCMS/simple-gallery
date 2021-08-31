@@ -31,7 +31,13 @@ final class UpdateDescription
 
     public function update()
     {
-        $this->image->setDescription($this->data->comment);
+        $this->image->setDescription(
+            trim(
+                $this->data->comment
+//                strip_tags($this->data->comment)
+//                str_replace('&nbsp;', ' ', strip_tags($this->data->comment))
+            )
+        );
         $this->em->flush();
     }
 
