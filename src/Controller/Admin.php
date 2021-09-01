@@ -12,6 +12,7 @@ use EnjoysCMS\Module\SimpleGallery\Admin\Delete;
 use EnjoysCMS\Module\SimpleGallery\Admin\Download;
 use EnjoysCMS\Module\SimpleGallery\Admin\Index;
 use EnjoysCMS\Module\SimpleGallery\Admin\UpdateDescription;
+use EnjoysCMS\Module\SimpleGallery\Admin\UpdateTitle;
 use EnjoysCMS\Module\SimpleGallery\Admin\Upload;
 use EnjoysCMS\Module\SimpleGallery\Config;
 use HttpSoft\Emitter\EmitterInterface;
@@ -112,6 +113,45 @@ final class Admin extends BaseController
 
         try {
             $container->get(UpdateDescription::class)->update();
+            $result = 'ok';
+            $code = 200;
+        } catch (\Exception $e) {
+            $code = 500;
+            $result = $e->getMessage();
+        } finally {
+            $response =
+                $response
+                    ->withStatus($code)
+                    ->withHeader(
+                        'Content-Type',
+                        'application/json',
+                    );
+
+            $response->getBody()->write(
+                json_encode($result)
+            );
+
+            $emitter->emit($response);
+        }
+    }
+
+
+    #[Route(
+        path: '/admin/gallery/update-title',
+        name: 'admin/gallery/updateTitle',
+        options: [
+            'aclComment' => '[Admin][Simple Gallery] Установка заголовка для изображений'
+        ]
+    )]
+    public function updateTitle(ContainerInterface $container)
+    {
+        /** @var Response $response */
+        $response = $container->get(Response::class);
+        /** @var EmitterInterface $emitter */
+        $emitter = $container->get(EmitterInterface::class);
+
+        try {
+            $container->get(UpdateTitle::class)->update();
             $result = 'ok';
             $code = 200;
         } catch (\Exception $e) {

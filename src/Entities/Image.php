@@ -56,7 +56,7 @@ final class Image
     }
 
     /**
-     * @ORM\Column(type="string", length=50, nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $description = null;
 
@@ -68,6 +68,7 @@ final class Image
 
     public function setDescription(?string $description): void
     {
+        $description = empty($description) ? null : mb_substr($description, 0, 255);
         $this->description = $description;
     }
 
@@ -77,6 +78,21 @@ final class Image
         return pathinfo($this->getFileName(), PATHINFO_EXTENSION);
     }
 
+    /**
+     * @ORM\Column(type="string", length=50, nullable=true)
+     */
+    private ?string $title = null;
 
+
+    public function getTitle(): ?string
+    {
+        return $this->title;
+    }
+
+    public function setTitle(?string $title): void
+    {
+        $title = empty($title) ? null : mb_substr($title, 0, 50);
+        $this->title = $title;
+    }
 
 }

@@ -28,7 +28,7 @@ final class WriteImage
         $image = new Image();
         $image->setFilename($this->imageDto->filename);
         $image->setHash($this->imageDto->hash);
-        $image->setDescription($this->imageDto->description);
+        $image->setTitle($this->imageDto->title);
 
 
         $this->entityManager->persist($image);

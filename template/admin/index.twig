@@ -20,6 +20,25 @@
                     })
                 });
             });
+
+        document.querySelectorAll('.title')
+            .forEach(function (item) {
+                item.addEventListener('blur', function (e) {
+                    let body = {
+                        'comment': item.innerText,
+                        'id': item.getAttribute('data-id')
+                    }
+                    fetch('{{ path('admin/gallery/updateTitle') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json;charset=utf-8',
+                        },
+                        body: JSON.stringify(body)
+                    }).then((response) => {
+                        return response.json()
+                    })
+                });
+            });
     </script>
 
     <section class="content">
@@ -31,21 +50,33 @@
             </div>
             <!-- /.card-header -->
             <div class="card-body">
-                <a class="btn btn-outline-dark" href="{{ path('admin/gallery/upload') }}"><i class="fa fa-upload"></i> Загрузить с компьютера</a>
-                <a class="btn btn-outline-dark" href="{{ path('admin/gallery/download') }}"><i class="fa fa-globe"></i> Загрузить из интернета</a>
+                <a class="btn btn-outline-dark" href="{{ path('admin/gallery/upload') }}"><i class="fa fa-upload"></i>
+                    Загрузить с компьютера</a>
+                <a class="btn btn-outline-dark" href="{{ path('admin/gallery/download') }}"><i class="fa fa-globe"></i>
+                    Загрузить из интернета</a>
                 <div class="row mt-3">
                     {% set uploadDir = _ENV['UPLOAD_URL'] ~ config.get('uploadDir') %}
                     {% for image in images %}
                         <div class="col-md-3">
                             <a href="{{ uploadDir ~ image.getFilename }}">
                                 <img class="img img-thumbnail"
-                                     src="{{ uploadDir ~ image.getFilename|replace({'.': '_thumb.'}) }}" />
+                                     src="{{ uploadDir ~ image.getFilename|replace({'.': '_thumb.'}) }}"/>
                             </a>
-                            <div class="description" data-id="{{ image.getId }}" contenteditable="true">
-                                {{ image.getDescription }}
+                            <div>Название:
+                                <div class="title font-weight-bold border-1 border p-1" data-id="{{ image.getId }}"
+                                     contenteditable="true">
+                                    {{ image.getTitle }}
+                                </div>
+                            </div>
+                            <div>Описание:
+                                <div class="description border-1 border p-1" data-id="{{ image.getId }}"
+                                     contenteditable="true">
+                                    {{ image.getDescription }}
+                                </div>
                             </div>
                             <div>
-                                <a class="btn btn-sm btn-danger my-3" href="{{ path('admin/gallery/delete', {"id": image.getId}) }}">удалить</a>
+                                <a class="btn btn-sm btn-danger my-3"
+                                   href="{{ path('admin/gallery/delete', {"id": image.getId}) }}">удалить</a>
                             </div>
                         </div>
                     {% endfor %}
