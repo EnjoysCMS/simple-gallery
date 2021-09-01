@@ -9,6 +9,9 @@ EnjoysCMS\Module\SimpleGallery\Blocks\ViewPhoto:
       value: 3
       name: Кол-во записей (изображений)
       description: Какое кол-во записей выводить в блок
+    cacheTime:
+      value: 0
+      name: Время кэширвания в сек
     orderItems:
       name: место получения данных
       value: desc
