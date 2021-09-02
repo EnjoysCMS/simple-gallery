@@ -46,9 +46,11 @@ class ViewPhoto extends AbstractBlock
 
         $cacher = new FileCache(['path' => $_ENV['TEMP_DIR'] . '/cache/blocks']);
 
-        if (null === $result = $cacher->get($this->block->getAlias())) {
+        $cacheId = md5($this->block->getAlias().json_encode($this->getOptions()));
+
+        if (null === $result = $cacher->get($cacheId)) {
             $result = $this->getImages($em->getRepository(Image::class));
-            $cacher->set($this->block->getAlias(), $result, (int)$this->getOption('cacheTime', 0));
+            $cacher->set($cacheId, $result, (int)$this->getOption('cacheTime', 0));
         }
 
         return $twig->render(
