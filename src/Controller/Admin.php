@@ -26,15 +26,9 @@ use function DI\get;
 
 final class Admin extends BaseController
 {
-    public function __construct(
-        Environment $twig,
-        ServerRequestInterface $serverRequest,
-        EntityManager $entityManager,
-        UrlGeneratorInterface $urlGenerator,
-        RendererInterface $renderer
-    ) {
-        parent::__construct($twig, $serverRequest, $entityManager, $urlGenerator, $renderer);
-        $this->twigLoader->addPath(__DIR__ . '/../../template', 'simple-gallery');
+    public function __construct(private ContainerInterface $container) {
+        parent::__construct($this->container);
+        $this->getTwig()->getLoader()->addPath(__DIR__ . '/../../template', 'simple-gallery');
     }
 
     #[Route(
@@ -44,11 +38,11 @@ final class Admin extends BaseController
             'aclComment' => '[Admin][Simple Gallery] Просмотр всех изображений'
         ]
     )]
-    public function index(ContainerInterface $container): string
+    public function index(): string
     {
         return $this->view(
             '@simple-gallery/admin/index.twig',
-            $this->getContext($container->get(Index::class))
+            $this->getContext($this->container->get(Index::class))
         );
     }
 
@@ -59,11 +53,11 @@ final class Admin extends BaseController
             'aclComment' => '[Admin][Simple Gallery] Загрузка изображений'
         ]
     )]
-    public function upload(ContainerInterface $container): string
+    public function upload(): string
     {
         return $this->view(
             '@simple-gallery/admin/upload.twig',
-            $this->getContext($container->get(Upload::class))
+            $this->getContext($this->container->get(Upload::class))
         );
     }
 
@@ -74,11 +68,11 @@ final class Admin extends BaseController
             'aclComment' => '[Admin][Simple Gallery] Загрузка изображений из интернета'
         ]
     )]
-    public function download(ContainerInterface $container): string
+    public function download(): string
     {
         return $this->view(
             '@simple-gallery/admin/upload.twig',
-            $this->getContext($container->get(Download::class))
+            $this->getContext($this->container->get(Download::class))
         );
     }
 
@@ -89,11 +83,11 @@ final class Admin extends BaseController
             'aclComment' => '[Admin][Simple Gallery] Удаление изображений'
         ]
     )]
-    public function delete(ContainerInterface $container): string
+    public function delete(): string
     {
         return $this->view(
             '@simple-gallery/admin/delete.twig',
-            $this->getContext($container->get(Delete::class))
+            $this->getContext($this->container->get(Delete::class))
         );
     }
 
@@ -104,15 +98,11 @@ final class Admin extends BaseController
             'aclComment' => '[Admin][Simple Gallery] Установка описания для изображений'
         ]
     )]
-    public function updateDescription(ContainerInterface $container)
+    public function updateDescription(Response $response, EmitterInterface $emitter)
     {
-        /** @var Response $response */
-        $response = $container->get(Response::class);
-        /** @var EmitterInterface $emitter */
-        $emitter = $container->get(EmitterInterface::class);
 
         try {
-            $container->get(UpdateDescription::class)->update();
+            $this->container->get(UpdateDescription::class)->update();
             $result = 'ok';
             $code = 200;
         } catch (\Exception $e) {
@@ -143,15 +133,11 @@ final class Admin extends BaseController
             'aclComment' => '[Admin][Simple Gallery] Установка заголовка для изображений'
         ]
     )]
-    public function updateTitle(ContainerInterface $container)
+    public function updateTitle(Response $response, EmitterInterface $emitter)
     {
-        /** @var Response $response */
-        $response = $container->get(Response::class);
-        /** @var EmitterInterface $emitter */
-        $emitter = $container->get(EmitterInterface::class);
 
         try {
-            $container->get(UpdateTitle::class)->update();
+            $this->container->get(UpdateTitle::class)->update();
             $result = 'ok';
             $code = 200;
         } catch (\Exception $e) {
