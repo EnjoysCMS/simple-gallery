@@ -1,3 +1,8 @@
-/vendor/
-/node_modules/
-/yarn.lock
+!*.gitkeep
+.idea/
+
+node_modules/
+
+vendor/
+composer.lock
+
