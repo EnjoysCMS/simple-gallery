@@ -11,19 +11,17 @@ use EnjoysCMS\Module\SimpleGallery\Admin\Index;
 use EnjoysCMS\Module\SimpleGallery\Admin\UpdateDescription;
 use EnjoysCMS\Module\SimpleGallery\Admin\UpdateTitle;
 use EnjoysCMS\Module\SimpleGallery\Admin\Upload;
-use EnjoysCMS\Module\SimpleGallery\Config;
+use Exception;
 use HttpSoft\Emitter\EmitterInterface;
 use HttpSoft\Message\Response;
 use Psr\Container\ContainerInterface;
+use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Twig\Environment;
-
-use function DI\get;
 
 final class Admin extends AdminBaseController
 {
-    public function __construct(private ContainerInterface $container) {
+    public function __construct(private ContainerInterface $container)
+    {
         parent::__construct($this->container);
         $this->getTwig()->getLoader()->addPath(__DIR__ . '/../../template', 'simple-gallery');
     }
@@ -35,12 +33,12 @@ final class Admin extends AdminBaseController
             'aclComment' => '[Admin][Simple Gallery] Просмотр всех изображений'
         ]
     )]
-    public function index(): string
+    public function index(): ResponseInterface
     {
-        return $this->view(
+        return $this->responseText($this->view(
             '@simple-gallery/admin/index.twig',
             $this->getContext($this->container->get(Index::class))
-        );
+        ));
     }
 
     #[Route(
@@ -50,12 +48,12 @@ final class Admin extends AdminBaseController
             'aclComment' => '[Admin][Simple Gallery] Загрузка изображений'
         ]
     )]
-    public function upload(): string
+    public function upload(): ResponseInterface
     {
-        return $this->view(
+        return $this->responseText($this->view(
             '@simple-gallery/admin/upload.twig',
             $this->getContext($this->container->get(Upload::class))
-        );
+        ));
     }
 
     #[Route(
@@ -65,12 +63,12 @@ final class Admin extends AdminBaseController
             'aclComment' => '[Admin][Simple Gallery] Загрузка изображений из интернета'
         ]
     )]
-    public function download(): string
+    public function download(): ResponseInterface
     {
-        return $this->view(
+        return $this->responseText($this->view(
             '@simple-gallery/admin/upload.twig',
             $this->getContext($this->container->get(Download::class))
-        );
+        ));
     }
 
     #[Route(
@@ -80,12 +78,12 @@ final class Admin extends AdminBaseController
             'aclComment' => '[Admin][Simple Gallery] Удаление изображений'
         ]
     )]
-    public function delete(): string
+    public function delete(): ResponseInterface
     {
-        return $this->view(
+        return $this->responseText($this->view(
             '@simple-gallery/admin/delete.twig',
             $this->getContext($this->container->get(Delete::class))
-        );
+        ));
     }
 
     #[Route(
@@ -95,30 +93,22 @@ final class Admin extends AdminBaseController
             'aclComment' => '[Admin][Simple Gallery] Установка описания для изображений'
         ]
     )]
-    public function updateDescription(Response $response, EmitterInterface $emitter)
+    public function updateDescription(): ResponseInterface
     {
-
         try {
             $this->container->get(UpdateDescription::class)->update();
             $result = 'ok';
             $code = 200;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $code = 500;
             $result = $e->getMessage();
         } finally {
-            $response =
-                $response
+            $this->response =
+                $this->response
                     ->withStatus($code)
-                    ->withHeader(
-                        'Content-Type',
-                        'application/json',
-                    );
+            ;
 
-            $response->getBody()->write(
-                json_encode($result)
-            );
-
-            $emitter->emit($response);
+            return $this->responseJson($result);
         }
     }
 
@@ -130,30 +120,22 @@ final class Admin extends AdminBaseController
             'aclComment' => '[Admin][Simple Gallery] Установка заголовка для изображений'
         ]
     )]
-    public function updateTitle(Response $response, EmitterInterface $emitter)
+    public function updateTitle(): ResponseInterface
     {
-
         try {
             $this->container->get(UpdateTitle::class)->update();
             $result = 'ok';
             $code = 200;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $code = 500;
             $result = $e->getMessage();
         } finally {
-            $response =
-                $response
+            $this->response =
+                $this->response
                     ->withStatus($code)
-                    ->withHeader(
-                        'Content-Type',
-                        'application/json',
-                    );
+            ;
 
-            $response->getBody()->write(
-                json_encode($result)
-            );
-
-            $emitter->emit($response);
+            return $this->responseJson($result);
         }
     }
 }
