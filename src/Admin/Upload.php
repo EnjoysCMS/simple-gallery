@@ -6,22 +6,21 @@ declare(strict_types=1);
 namespace EnjoysCMS\Module\SimpleGallery\Admin;
 
 
-use App\Module\Admin\Core\ModelInterface;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
+use Enjoys\Forms\AttributeFactory;
 use Enjoys\Forms\Elements\File;
 use Enjoys\Forms\Exception\ExceptionRule;
 use Enjoys\Forms\Form;
-use Enjoys\Forms\Renderer\Bootstrap4\Bootstrap4;
+use Enjoys\Forms\Interfaces\RendererInterface;
 use Enjoys\Forms\Rules;
-use Enjoys\Http\ServerRequestInterface;
+use Enjoys\ServerRequestWrapperInterface;
 use EnjoysCMS\Core\Components\Helpers\Redirect;
 use EnjoysCMS\Core\Components\Modules\ModuleConfig;
+use EnjoysCMS\Module\Admin\Core\ModelInterface;
 use EnjoysCMS\Module\SimpleGallery\Config;
-use EnjoysCMS\Module\SimpleGallery\Entities\Image;
 use EnjoysCMS\Module\SimpleGallery\UploadFileStorage;
-use Intervention\Image\ImageManagerStatic;
 use Psr\Http\Message\UploadedFileInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
@@ -31,7 +30,8 @@ final class Upload implements ModelInterface
     private ModuleConfig $config;
 
     public function __construct(
-        private ServerRequestInterface $serverRequest,
+        private ServerRequestWrapperInterface $request,
+        private RendererInterface $renderer,
         private EntityManager $em,
         private UrlGeneratorInterface $urlGenerator
     ) {
@@ -55,10 +55,10 @@ final class Upload implements ModelInterface
             }
         }
 
-        $renderer = new Bootstrap4([], $form);
+        $this->renderer->setForm($form);
 
         return [
-            'form' => $renderer->render()
+            'form' => $this->renderer->output()
         ];
     }
 
@@ -78,7 +78,7 @@ final class Upload implements ModelInterface
                     'extensions' => 'jpg, png, jpeg',
                 ]
             )
-            ->setAttribute('accept', '.png, .jpg, .jpeg');
+            ->setAttribute(AttributeFactory::create('accept', '.png, .jpg, .jpeg'));
 
         $form->submit('upload');
         return $form;
@@ -92,7 +92,7 @@ final class Upload implements ModelInterface
     private function doAction()
     {
         /** @var UploadedFileInterface $file */
-        $file = $this->serverRequest->files('image');
+        $file = $this->request->getFilesData('image');
 
 
         $storage = $this->config->get('uploadStorage');

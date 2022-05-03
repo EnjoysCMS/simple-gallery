@@ -12,8 +12,12 @@ use DoctrineExtensions\Query\Mysql\Rand;
 use Enjoys\SimpleCache\CacheException;
 use Enjoys\SimpleCache\Cacher\FileCache;
 use EnjoysCMS\Core\Components\Blocks\AbstractBlock;
+use EnjoysCMS\Core\Entities\Block as Entity;
 use EnjoysCMS\Module\SimpleGallery\Config;
 use EnjoysCMS\Module\SimpleGallery\Entities\Image;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\ContainerInterface;
+use Psr\Container\NotFoundExceptionInterface;
 use Psr\SimpleCache\InvalidArgumentException;
 use Twig\Environment;
 use Twig\Error\LoaderError;
@@ -22,6 +26,10 @@ use Twig\Error\SyntaxError;
 
 class ViewPhoto extends AbstractBlock
 {
+public function __construct(private ContainerInterface $container, Entity $block)
+{
+    parent::__construct($block);
+}
 
     public static function getBlockDefinitionFile(): string
     {
@@ -29,11 +37,14 @@ class ViewPhoto extends AbstractBlock
     }
 
     /**
-     * @throws SyntaxError
-     * @throws RuntimeError
      * @throws CacheException
-     * @throws LoaderError
      * @throws InvalidArgumentException
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
+     * @throws \Enjoys\SimpleCache\InvalidArgumentException
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
      */
     public function view()
     {

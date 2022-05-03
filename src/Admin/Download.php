@@ -6,25 +6,21 @@ declare(strict_types=1);
 namespace EnjoysCMS\Module\SimpleGallery\Admin;
 
 
-use App\Module\Admin\Core\ModelInterface;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
 use Enjoys\Forms\Elements\File;
 use Enjoys\Forms\Exception\ExceptionRule;
 use Enjoys\Forms\Form;
-use Enjoys\Forms\Renderer\Bootstrap4\Bootstrap4;
+use Enjoys\Forms\Interfaces\RendererInterface;
 use Enjoys\Forms\Rules;
-use Enjoys\Http\ServerRequestInterface;
+use Enjoys\ServerRequestWrapperInterface;
 use EnjoysCMS\Core\Components\Helpers\Redirect;
 use EnjoysCMS\Core\Components\Modules\ModuleConfig;
+use EnjoysCMS\Module\Admin\Core\ModelInterface;
 use EnjoysCMS\Module\SimpleGallery\Config;
-use EnjoysCMS\Module\SimpleGallery\Entities\Image;
-use EnjoysCMS\Module\SimpleGallery\UploadFileStorage;
 use GuzzleHttp\Client;
 use GuzzleHttp\RequestOptions;
-use Intervention\Image\ImageManagerStatic;
-use Psr\Http\Message\UploadedFileInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 use function Enjoys\FileSystem\createDirectory;
@@ -35,8 +31,9 @@ final class Download implements ModelInterface
     private ModuleConfig $config;
 
     public function __construct(
-        private ServerRequestInterface $serverRequest,
+        private ServerRequestWrapperInterface $request,
         private EntityManager $em,
+        private RendererInterface $renderer,
         private UrlGeneratorInterface $urlGenerator
     ) {
         $this->config = Config::getConfig();
@@ -59,10 +56,10 @@ final class Download implements ModelInterface
             }
         }
 
-        $renderer = new Bootstrap4([], $form);
+        $this->renderer->setForm($form);
 
         return [
-            'form' => $renderer->render()
+            'form' => $this->renderer->output()
         ];
     }
 
@@ -72,7 +69,6 @@ final class Download implements ModelInterface
     private function getForm(): Form
     {
         $form = new Form();
-        $form->setMethod('post');
         $form->url('image', 'Изображение')->addRule(Rules::REQUIRED);
         $form->submit('upload', 'Download');
         return $form;
@@ -130,7 +126,7 @@ final class Download implements ModelInterface
                 RequestOptions::IDN_CONVERSION => true
             ]
         );
-        $response = $client->get($this->serverRequest->post('image'));
+        $response = $client->get($this->request->getPostData('image'));
         $data = $response->getBody()->getContents();
         $ext = $this->getExt($response->getHeaderLine('Content-Type'));
         $targetPath = $uploadDirectory . '/' . $this->getNewFilename() . '.' . $ext;

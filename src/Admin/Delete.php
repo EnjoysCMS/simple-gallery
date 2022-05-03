@@ -6,16 +6,16 @@ declare(strict_types=1);
 namespace EnjoysCMS\Module\SimpleGallery\Admin;
 
 
-use App\Module\Admin\Core\ModelInterface;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
 use Enjoys\Forms\Elements\File;
 use Enjoys\Forms\Form;
-use Enjoys\Forms\Renderer\Bootstrap4\Bootstrap4;
-use Enjoys\Http\ServerRequestInterface;
+use Enjoys\Forms\Interfaces\RendererInterface;
+use Enjoys\ServerRequestWrapperInterface;
 use EnjoysCMS\Core\Components\Helpers\Redirect;
 use EnjoysCMS\Core\Components\Modules\ModuleConfig;
+use EnjoysCMS\Module\Admin\Core\ModelInterface;
 use EnjoysCMS\Module\SimpleGallery\Config;
 use EnjoysCMS\Module\SimpleGallery\Entities\Image;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -28,11 +28,12 @@ final class Delete implements ModelInterface
 
     public function __construct(
         private EntityManager $entityManager,
-        private ServerRequestInterface $serverRequest,
+        private ServerRequestWrapperInterface $request,
+        private RendererInterface $renderer,
         private UrlGeneratorInterface $urlGenerator
     ) {
         $image = $this->entityManager->getRepository(Image::class)->findOneBy(
-            ['id' => $this->serverRequest->get('id', 0)]
+            ['id' => $this->request->getQueryData('id', 0)]
         );
         if ($image === null) {
             throw new \InvalidArgumentException('Нет изображения с таким id');
@@ -56,10 +57,10 @@ final class Delete implements ModelInterface
             }
         }
 
-        $renderer = new Bootstrap4([], $form);
+        $this->renderer->setForm($form);
 
         return [
-            'form' => $renderer->render(),
+            'form' => $this->renderer->output(),
             'image' => $this->image,
             'config' => $this->config,
         ];

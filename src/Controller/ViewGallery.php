@@ -6,11 +6,18 @@ declare(strict_types=1);
 namespace EnjoysCMS\Module\SimpleGallery\Controller;
 
 use Doctrine\ORM\EntityManager;
+use EnjoysCMS\Core\BaseController;
 use EnjoysCMS\Module\SimpleGallery\Config;
 use EnjoysCMS\Module\SimpleGallery\Entities\Image;
+use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
+use Psr\Container\NotFoundExceptionInterface;
+use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Twig\Environment;
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
+use Twig\Error\SyntaxError;
 
 #[Route(
     path: 'gallery',
@@ -19,9 +26,16 @@ use Twig\Environment;
         'aclComment' => '[Public] Просмотр изображений'
     ]
 )]
-final class ViewGallery
+final class ViewGallery extends BaseController
 {
-    public function __invoke(ContainerInterface $container)
+    /**
+     * @throws NotFoundExceptionInterface
+     * @throws SyntaxError
+     * @throws ContainerExceptionInterface
+     * @throws RuntimeError
+     * @throws LoaderError
+     */
+    public function __invoke(ContainerInterface $container): ResponseInterface
     {
         /** @var Environment $twig */
         $twig = $container->get(Environment::class);
@@ -33,9 +47,9 @@ final class ViewGallery
             $template_path = __DIR__ . '/../../template/view_gallery.twig';
         }
 
-        return $twig->render($template_path, [
+        return $this->responseText($twig->render($template_path, [
             'images' => $images,
             'config' => Config::getConfig()->getAll()
-        ]);
+        ]));
     }
 }

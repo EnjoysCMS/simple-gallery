@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace EnjoysCMS\Module\SimpleGallery\Controller;
 
-use App\Module\Admin\BaseController;
-use Doctrine\ORM\EntityManager;
-use Enjoys\Forms\Renderer\RendererInterface;
-use Enjoys\Http\ServerRequestInterface;
+use EnjoysCMS\Module\Admin\AdminBaseController;
 use EnjoysCMS\Module\SimpleGallery\Admin\Delete;
 use EnjoysCMS\Module\SimpleGallery\Admin\Download;
 use EnjoysCMS\Module\SimpleGallery\Admin\Index;
@@ -24,7 +21,7 @@ use Twig\Environment;
 
 use function DI\get;
 
-final class Admin extends BaseController
+final class Admin extends AdminBaseController
 {
     public function __construct(private ContainerInterface $container) {
         parent::__construct($this->container);
