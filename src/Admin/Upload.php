@@ -71,7 +71,6 @@ final class Upload implements ModelInterface
         $form->file('image', 'Изображение')
             ->addRule(
                 Rules::UPLOAD,
-                null,
                 [
                     'required',
                     'maxsize' => 1024 * 1024 * 2,
