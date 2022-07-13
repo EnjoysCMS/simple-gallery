@@ -57,9 +57,9 @@
                 <div class="row mt-3">
                     {% set uploadDir = _ENV['UPLOAD_URL'] ~ config.get('uploadDir') %}
                     {% for image in images %}
-                        <div class="col-md-3">
+                        <div class="col-md-12 card m-3">
                             <a href="{{ uploadDir ~ image.getFilename }}">
-                                <img class="img img-thumbnail"
+                                <img class="img py-3"
                                      src="{{ uploadDir ~ image.getFilename|replace({'.': '_thumb.'}) }}"/>
                             </a>
                             <div>Название:
