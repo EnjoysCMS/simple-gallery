@@ -29,7 +29,7 @@ final class Index implements ModelInterface
     {
         return [
             'config' => $this->config,
-            'images' => $this->repository->findAll()
+            'images' => $this->repository->findBy([], ['id' => 'desc'])
         ];
     }
 }
