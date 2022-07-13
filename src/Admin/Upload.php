@@ -48,9 +48,9 @@ final class Upload implements ModelInterface
         if ($form->isSubmitted()) {
             try {
                 $this->doAction();
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 /** @var File $image */
-                $image = $form->getElement('image');
+                $image = $form->getElement('image[]');
                 $image->setRuleError($e->getMessage());
             }
         }
@@ -69,6 +69,7 @@ final class Upload implements ModelInterface
     {
         $form = new Form();
         $form->file('image', 'Изображение')
+            ->setMultiple()
             ->addRule(
                 Rules::UPLOAD,
                 [
@@ -90,10 +91,26 @@ final class Upload implements ModelInterface
      */
     private function doAction()
     {
-        /** @var UploadedFileInterface $file */
+        /** @var UploadedFileInterface|UploadedFileInterface[] $file */
         $file = $this->request->getFilesData('image');
 
+        if (is_array($file)) {
+            foreach ($file as $item) {
+                $this->uploadFile($item);
+            }
+        } else {
+            $this->uploadFile($file);
+        }
 
+        Redirect::http($this->urlGenerator->generate('admin/gallery'));
+    }
+
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     */
+    private function uploadFile(UploadedFileInterface $file): void
+    {
         $storage = $this->config->get('uploadStorage');
 
 
@@ -115,19 +132,13 @@ final class Upload implements ModelInterface
         try {
             new WriteImage($this->em, $imageDto);
             Thumbnail::create($fileStorage->getTargetPath());
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             if (file_exists($fileStorage->getTargetPath())) {
                 unlink($fileStorage->getTargetPath());
             }
             throw $e;
         }
-
-
-
-        Redirect::http($this->urlGenerator->generate('admin/gallery'));
     }
-
-
 
 
     private function getUploadSubDir(): string
