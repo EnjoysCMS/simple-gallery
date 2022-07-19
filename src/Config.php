@@ -8,6 +8,7 @@ use DI\DependencyException;
 use DI\FactoryInterface;
 use DI\NotFoundException;
 use EnjoysCMS\Core\Components\Modules\ModuleConfig;
+use EnjoysCMS\Core\StorageUpload\StorageUploadInterface;
 
 final class Config
 {
@@ -28,5 +29,17 @@ final class Config
         return $this->config;
     }
 
+
+    public function getStorageUpload(string $key = null): StorageUploadInterface
+    {
+        $key = $key ?? $this->config->get('uploadStorage');
+
+        $config = $this->config->get('storageList')[$key] ?? throw new \RuntimeException(
+                sprintf('Not set config `storageList.%s`', $key)
+            );
+        /** @var class-string<StorageUploadInterface> $storageUploadClass */
+        $storageUploadClass = key($config);
+        return new $storageUploadClass(...current($config));
+    }
 
 }

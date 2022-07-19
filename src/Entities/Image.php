@@ -95,4 +95,20 @@ final class Image
         $this->title = $title;
     }
 
+    /**
+     * @var string
+     * @ORM\Column(type="string", length=50, options={"default": "local"})
+     */
+    private string $storage = "local";
+
+    public function getStorage(): string
+    {
+        return $this->storage;
+    }
+
+    public function setStorage(string $storage): void
+    {
+        $this->storage = $storage;
+    }
+
 }

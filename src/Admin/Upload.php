@@ -33,6 +33,8 @@ final class Upload implements ModelInterface
         private UrlGeneratorInterface $urlGenerator,
         private Config $config
     ) {
+
+      //  dd($this->config->getStorageUpload()->getFileSystem());
     }
 
     /**

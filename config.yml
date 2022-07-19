@@ -1,2 +1,9 @@
-uploadStorage: \EnjoysCMS\Module\SimpleGallery\Admin\UploadStorage\FileSystem
-uploadDir: /gallery #relative env upload_dir
+uploadStorage: local
+storageList:
+  local:
+    \EnjoysCMS\Core\StorageUpload\Local:
+      rootDirectory: /public/upload/gallery
+      publicUrl: /upload/gallery
+      permissionMap:
+        dir:
+          private: 0755
