@@ -10,7 +10,6 @@ use EnjoysCMS\Core\BaseController;
 use EnjoysCMS\Module\SimpleGallery\Config;
 use EnjoysCMS\Module\SimpleGallery\Entities\Image;
 use Psr\Container\ContainerExceptionInterface;
-use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Routing\Annotation\Route;
@@ -35,11 +34,10 @@ final class ViewGallery extends BaseController
      * @throws RuntimeError
      * @throws LoaderError
      */
-    public function __invoke(ContainerInterface $container): ResponseInterface
+    public function __invoke(Environment $twig, EntityManager $em, Config $config): ResponseInterface
     {
-        /** @var Environment $twig */
-        $twig = $container->get(Environment::class);
-        $images = $container->get(EntityManager::class)->getRepository(Image::class)->findAll();
+        $images = $em->getRepository(Image::class)->findAll();
+
 
         $template_path = '@m/simple-gallery/view_gallery.twig';
 
@@ -49,7 +47,7 @@ final class ViewGallery extends BaseController
 
         return $this->responseText($twig->render($template_path, [
             'images' => $images,
-            'config' => Config::getConfig()->getAll()
+            'config' => $config->getModuleConfig()->asArray()
         ]));
     }
 }

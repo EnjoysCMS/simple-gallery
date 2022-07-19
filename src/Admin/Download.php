@@ -16,7 +16,6 @@ use Enjoys\Forms\Interfaces\RendererInterface;
 use Enjoys\Forms\Rules;
 use Enjoys\ServerRequestWrapperInterface;
 use EnjoysCMS\Core\Components\Helpers\Redirect;
-use EnjoysCMS\Core\Components\Modules\ModuleConfig;
 use EnjoysCMS\Module\Admin\Core\ModelInterface;
 use EnjoysCMS\Module\SimpleGallery\Config;
 use GuzzleHttp\Client;
@@ -28,15 +27,13 @@ use function Enjoys\FileSystem\createDirectory;
 final class Download implements ModelInterface
 {
 
-    private ModuleConfig $config;
-
     public function __construct(
         private ServerRequestWrapperInterface $request,
         private EntityManager $em,
         private RendererInterface $renderer,
-        private UrlGeneratorInterface $urlGenerator
+        private UrlGeneratorInterface $urlGenerator,
+        private Config $config
     ) {
-        $this->config = Config::getConfig();
     }
 
     /**
@@ -114,7 +111,7 @@ final class Download implements ModelInterface
 //        }
 
         $uploadDirectory = $_ENV['UPLOAD_DIR'] . '/' . trim(
-                $this->config->get('uploadDir'),
+                $this->config->getModuleConfig()->get('uploadDir'),
                 '/\\'
             ) . '/' . $this->getUploadSubDir();
 

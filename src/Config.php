@@ -4,20 +4,29 @@ declare(strict_types=1);
 
 namespace EnjoysCMS\Module\SimpleGallery;
 
+use DI\DependencyException;
 use DI\FactoryInterface;
-use EnjoysCMS\Core\Components\Helpers\HelpersBase;
+use DI\NotFoundException;
 use EnjoysCMS\Core\Components\Modules\ModuleConfig;
-use Psr\Container\ContainerInterface;
 
 final class Config
 {
 
-    public static function getConfig(): ModuleConfig
+    private ModuleConfig $config;
+
+    /**
+     * @throws DependencyException
+     * @throws NotFoundException
+     */
+    public function __construct(FactoryInterface $factory)
     {
-        $container = HelpersBase::getContainer();
-        $composer = \json_decode(\file_get_contents(__DIR__ . '/../composer.json'));
-        return $container
-            ->get(FactoryInterface::class)
-            ->make(ModuleConfig::class, ['moduleName' => $composer->name]);
+        $this->config = $factory->make(ModuleConfig::class, ['moduleName' => 'enjoyscms/simple-gallery']);
     }
+
+    public function getModuleConfig(): ModuleConfig
+    {
+        return $this->config;
+    }
+
+
 }

@@ -14,7 +14,6 @@ use Enjoys\Forms\Form;
 use Enjoys\Forms\Interfaces\RendererInterface;
 use Enjoys\ServerRequestWrapperInterface;
 use EnjoysCMS\Core\Components\Helpers\Redirect;
-use EnjoysCMS\Core\Components\Modules\ModuleConfig;
 use EnjoysCMS\Module\Admin\Core\ModelInterface;
 use EnjoysCMS\Module\SimpleGallery\Config;
 use EnjoysCMS\Module\SimpleGallery\Entities\Image;
@@ -24,13 +23,13 @@ final class Delete implements ModelInterface
 {
 
     private Image $image;
-    private ModuleConfig $config;
 
     public function __construct(
         private EntityManager $entityManager,
         private ServerRequestWrapperInterface $request,
         private RendererInterface $renderer,
-        private UrlGeneratorInterface $urlGenerator
+        private UrlGeneratorInterface $urlGenerator,
+        private Config $config
     ) {
         $image = $this->entityManager->getRepository(Image::class)->findOneBy(
             ['id' => $this->request->getQueryData('id', 0)]
@@ -40,7 +39,6 @@ final class Delete implements ModelInterface
         }
 
         $this->image = $image;
-        $this->config = Config::getConfig();
     }
 
     public function getContext(): array
@@ -62,7 +60,7 @@ final class Delete implements ModelInterface
         return [
             'form' => $this->renderer->output(),
             'image' => $this->image,
-            'config' => $this->config,
+            'config' => $this->config->getModuleConfig(),
         ];
     }
 
@@ -85,7 +83,7 @@ final class Delete implements ModelInterface
 
         try {
             $imagePath = pathinfo(
-                realpath($_ENV['UPLOAD_DIR'] . $this->config->get('uploadDir') . $this->image->getFilename())
+                realpath($_ENV['UPLOAD_DIR'] . $this->config->getModuleConfig()->get('uploadDir') . $this->image->getFilename())
             );
             $images = glob(
                 $imagePath['dirname'] . DIRECTORY_SEPARATOR . $imagePath['filename'] . '*.' . $imagePath['extension']

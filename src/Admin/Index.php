@@ -9,7 +9,6 @@ namespace EnjoysCMS\Module\SimpleGallery\Admin;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\Persistence\ObjectRepository;
-use EnjoysCMS\Core\Components\Modules\ModuleConfig;
 use EnjoysCMS\Module\Admin\Core\ModelInterface;
 use EnjoysCMS\Module\SimpleGallery\Config;
 use EnjoysCMS\Module\SimpleGallery\Entities\Image;
@@ -17,18 +16,16 @@ use EnjoysCMS\Module\SimpleGallery\Entities\Image;
 final class Index implements ModelInterface
 {
     private ObjectRepository|EntityRepository $repository;
-    private ModuleConfig $config;
 
-    public function __construct(private EntityManager $em)
+    public function __construct(private EntityManager $em, private Config $config)
     {
         $this->repository = $this->em->getRepository(Image::class);
-        $this->config = Config::getConfig();
     }
 
     public function getContext(): array
     {
         return [
-            'config' => $this->config,
+            'config' => $this->config->getModuleConfig(),
             'images' => $this->repository->findBy([], ['id' => 'desc'])
         ];
     }

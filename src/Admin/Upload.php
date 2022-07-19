@@ -17,7 +17,6 @@ use Enjoys\Forms\Interfaces\RendererInterface;
 use Enjoys\Forms\Rules;
 use Enjoys\ServerRequestWrapperInterface;
 use EnjoysCMS\Core\Components\Helpers\Redirect;
-use EnjoysCMS\Core\Components\Modules\ModuleConfig;
 use EnjoysCMS\Module\Admin\Core\ModelInterface;
 use EnjoysCMS\Module\SimpleGallery\Config;
 use EnjoysCMS\Module\SimpleGallery\UploadFileStorage;
@@ -27,15 +26,13 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 final class Upload implements ModelInterface
 {
 
-    private ModuleConfig $config;
-
     public function __construct(
         private ServerRequestWrapperInterface $request,
         private RendererInterface $renderer,
         private EntityManager $em,
-        private UrlGeneratorInterface $urlGenerator
+        private UrlGeneratorInterface $urlGenerator,
+        private Config $config
     ) {
-        $this->config = Config::getConfig();
     }
 
     /**
@@ -111,11 +108,11 @@ final class Upload implements ModelInterface
      */
     private function uploadFile(UploadedFileInterface $file): void
     {
-        $storage = $this->config->get('uploadStorage');
+        $storage = $this->config->getModuleConfig()->get('uploadStorage');
 
 
         /** @var UploadFileStorage $fileStorage */
-        $uploadDirectory = $_ENV['UPLOAD_DIR'] . '/' . trim($this->config->get('uploadDir'), '/\\');
+        $uploadDirectory = $_ENV['UPLOAD_DIR'] . '/' . trim($this->config->getModuleConfig()->get('uploadDir'), '/\\');
         $fileStorage = new $storage(
             $uploadDirectory . '/' . $this->getUploadSubDir()
         );
