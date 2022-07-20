@@ -69,7 +69,7 @@ public function __construct(private ContainerInterface $container, Entity $block
             [
                 'images' => $result,
                 'options' => $this->getOptions(),
-                'config' => $this->container->get(Config::class)->getModuleConfig()->getAll()
+                'config' => $this->container->get(Config::class)
             ]
         );
     }
