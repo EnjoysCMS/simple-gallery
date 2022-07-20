@@ -60,7 +60,7 @@ final class Delete implements ModelInterface
         return [
             'form' => $this->renderer->output(),
             'image' => $this->image,
-            'config' => $this->config->getModuleConfig(),
+            'config' => $this->config,
         ];
     }
 
@@ -81,17 +81,11 @@ final class Delete implements ModelInterface
         $this->entityManager->remove($this->image);
         $this->entityManager->flush();
 
-        try {
-            $imagePath = pathinfo(
-                realpath($_ENV['UPLOAD_DIR'] . $this->config->getModuleConfig()->get('uploadDir') . $this->image->getFilename())
-            );
-            $images = glob(
-                $imagePath['dirname'] . DIRECTORY_SEPARATOR . $imagePath['filename'] . '*.' . $imagePath['extension']
-            );
+        $storage = $this->config->getStorageUpload($this->image->getStorage());
+        $filesystem = $storage->getFileSystem();
 
-            foreach ($images as $image) {
-                unlink($image);
-            }
+        try {
+            $filesystem->delete($this->image->getFilename());
         } catch (\TypeError) {
         }
 

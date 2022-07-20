@@ -11,7 +11,7 @@
             <!-- /.card-header -->
             <div class="card-body">
                 <img class="img img-thumbnail"
-                     src="{{ _ENV['UPLOAD_URL'] ~ config.get('uploadDir') ~ image.getFilename|replace({'.': '_thumb.'}) }}">
+                     src="{{ config.getStorageUpload(image.storage).url(image.filename|replace({'.': '_thumb.'}))  }}">
 
                 {{ form|raw }}
             </div>

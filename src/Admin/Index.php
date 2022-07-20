@@ -25,7 +25,7 @@ final class Index implements ModelInterface
     public function getContext(): array
     {
         return [
-            'config' => $this->config->getModuleConfig(),
+            'config' => $this->config,
             'images' => $this->repository->findBy([], ['id' => 'desc'])
         ];
     }
