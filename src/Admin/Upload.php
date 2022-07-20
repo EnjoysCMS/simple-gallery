@@ -19,7 +19,6 @@ use Enjoys\ServerRequestWrapperInterface;
 use EnjoysCMS\Core\Components\Helpers\Redirect;
 use EnjoysCMS\Module\Admin\Core\ModelInterface;
 use EnjoysCMS\Module\SimpleGallery\Config;
-use EnjoysCMS\Module\SimpleGallery\UploadFileStorage;
 use Psr\Http\Message\UploadedFileInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
@@ -108,33 +107,30 @@ final class Upload implements ModelInterface
      * @throws OptimisticLockException
      * @throws ORMException
      */
-    private function uploadFile(UploadedFileInterface $file): void
+    private function uploadFile(UploadedFileInterface $uploadedFile): void
     {
-        $storage = $this->config->getModuleConfig()->get('uploadStorage');
+        $storage = $this->config->getStorageUpload();
+        $filesystem = $storage->getFileSystem();
+      //  $targetPath = $this->getUploadSubDir() . $this->getNewFilename();
 
+        $file = new \Enjoys\Upload\File($uploadedFile, $filesystem);
+        $file->setFilename($this->getNewFilename());
+        $file->upload($this->getUploadSubDir());
 
-        /** @var UploadFileStorage $fileStorage */
-        $uploadDirectory = $_ENV['UPLOAD_DIR'] . '/' . trim($this->config->getModuleConfig()->get('uploadDir'), '/\\');
-        $fileStorage = new $storage(
-            $uploadDirectory . '/' . $this->getUploadSubDir()
-        );
-        $fileStorage->upload($file, $this->getNewFilename());
-
-        $hash = md5_file($fileStorage->getTargetPath());
+        $fileContent = $filesystem->read($file->getTargetPath());
+        $hash = md5($fileContent);
 
         $imageDto = new ImageDto(
-            str_replace($uploadDirectory, '', $fileStorage->getTargetPath()),
+            $file->getTargetPath(),
             $hash,
-            pathinfo($file->getClientFilename(), PATHINFO_FILENAME)
+            $file->getOriginalFilename()
         );
 
         try {
             new WriteImage($this->em, $imageDto);
-            Thumbnail::create($fileStorage->getTargetPath());
+        //    Thumbnail::create($fileStorage->getTargetPath());
         } catch (\Throwable $e) {
-            if (file_exists($fileStorage->getTargetPath())) {
-                unlink($fileStorage->getTargetPath());
-            }
+            $filesystem->delete($file->getTargetPath());
             throw $e;
         }
     }
