@@ -22,8 +22,6 @@ use GuzzleHttp\Client;
 use GuzzleHttp\RequestOptions;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
-use function Enjoys\FileSystem\createDirectory;
-
 final class Download implements ModelInterface
 {
 
@@ -78,44 +76,9 @@ final class Download implements ModelInterface
      */
     private function doAction()
     {
-//        /** @var UploadedFileInterface $file */
-//        $file = $this->serverRequest->files('image');
-//
-//
-//        $storage = $this->config->get('uploadStorage');
-//
-//
-//        /** @var UploadFileStorage $fileStorage */
-//        $uploadDirectory = $_ENV['UPLOAD_DIR'] . '/' . trim($this->config->get('uploadDir'), '/\\');
-//        $fileStorage = new $storage(
-//            $uploadDirectory . '/' . $this->getUploadSubDir()
-//        );
-//        $fileStorage->upload($file, $this->getNewFilename());
-//
-//        $hash = md5_file($fileStorage->getTargetPath());
-//
-//        $imageDto = new ImageDto(
-//            str_replace($uploadDirectory, '', $fileStorage->getTargetPath()),
-//            $hash,
-//            pathinfo($file->getClientFilename(), PATHINFO_FILENAME)
-//        );
-//
-//        try {
-//            new WriteImage($this->em, $imageDto);
-//            Thumbnail::create($fileStorage->getTargetPath());
-//        } catch (\Exception $e) {
-//            if (file_exists($fileStorage->getTargetPath())) {
-//                unlink($fileStorage->getTargetPath());
-//            }
-//            throw $e;
-//        }
 
-        $uploadDirectory = $_ENV['UPLOAD_DIR'] . '/' . trim(
-                $this->config->getModuleConfig()->get('uploadDir'),
-                '/\\'
-            ) . '/' . $this->getUploadSubDir();
-
-        createDirectory($uploadDirectory);
+        $storage = $this->config->getStorageUpload();
+        $filesystem = $storage->getFileSystem();
 
         $client = new Client(
             [
@@ -125,25 +88,24 @@ final class Download implements ModelInterface
         );
         $response = $client->get($this->request->getPostData('image'));
         $data = $response->getBody()->getContents();
-        $ext = $this->getExt($response->getHeaderLine('Content-Type'));
-        $targetPath = $uploadDirectory . '/' . $this->getNewFilename() . '.' . $ext;
+        $extension = $this->getExt($response->getHeaderLine('Content-Type'));
+        $targetPath = $this->getUploadSubDir() . '/' . $this->getNewFilename() . '.' . $extension;
 
-        file_put_contents($targetPath, $data);
+        $filesystem->write($targetPath, $data);
 
-        $hash = md5_file($targetPath);
+        $fileContent = $filesystem->read($targetPath);
+        $hash = md5($fileContent);
 
         $imageDto = new ImageDto(
-            str_replace($uploadDirectory, '/' . $this->getUploadSubDir(), $targetPath),
+            $targetPath,
             $hash
         );
 
         try {
             new WriteImage($this->em, $imageDto);
-            Thumbnail::create($targetPath);
+//            Thumbnail::create($targetPath);
         } catch (\Exception $e) {
-            if (file_exists($targetPath)) {
-                unlink($targetPath);
-            }
+            $filesystem->delete($targetPath);
             throw $e;
         }
 
