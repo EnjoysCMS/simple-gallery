@@ -31,8 +31,6 @@ final class WriteImage
         $image->setTitle($this->imageDto->title);
         $image->setStorage($this->imageDto->storage);
 
-
         $this->entityManager->persist($image);
-        $this->entityManager->flush();
     }
 }

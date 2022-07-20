@@ -32,8 +32,7 @@ final class Upload implements ModelInterface
         private UrlGeneratorInterface $urlGenerator,
         private Config $config
     ) {
-
-      //  dd($this->config->getStorageUpload()->getFileSystem());
+        //  dd($this->config->getStorageUpload()->getFileSystem());
     }
 
     /**
@@ -49,7 +48,7 @@ final class Upload implements ModelInterface
             } catch (\Throwable $e) {
                 /** @var File $image */
                 $image = $form->getElement('image[]');
-                $image->setRuleError(htmlspecialchars($e->getMessage()));
+                $image->setRuleError(htmlspecialchars(sprintf('%s: %s', get_class($e), $e->getMessage())));
             }
         }
 
@@ -76,7 +75,8 @@ final class Upload implements ModelInterface
                     'extensions' => 'jpg, png, jpeg',
                 ]
             )
-            ->setAttribute(AttributeFactory::create('accept', '.png, .jpg, .jpeg'));
+            ->setAttribute(AttributeFactory::create('accept', '.png, .jpg, .jpeg'))
+        ;
 
         $form->submit('upload');
         return $form;
@@ -114,23 +114,24 @@ final class Upload implements ModelInterface
         $thumbnailService = $this->config->getModuleConfig()->get('thumbnailService');
 
 
-        $file = new \Enjoys\Upload\File($uploadedFile, $filesystem);
-        $file->setFilename($this->getNewFilename());
-        $file->upload($this->getUploadSubDir());
-
-        $fileContent = $filesystem->read($file->getTargetPath());
-        $hash = md5($fileContent);
-
-        $imageDto = new ImageDto(
-            $file->getTargetPath(),
-            $hash,
-            $file->getOriginalFilename()
-        );
-
-        $imageDto->storage = $this->config->getModuleConfig()->get('uploadStorage');
-
         try {
+            $file = new \Enjoys\Upload\File($uploadedFile, $filesystem);
+            $file->setFilename($this->getNewFilename());
+            $file->upload($this->getUploadSubDir());
+
+            $fileContent = $filesystem->read($file->getTargetPath());
+            $hash = md5($fileContent);
+
+            $imageDto = new ImageDto(
+                $file->getTargetPath(),
+                $hash,
+                $file->getOriginalFilename()
+            );
+
+            $imageDto->storage = $this->config->getModuleConfig()->get('uploadStorage');
+
             new WriteImage($this->em, $imageDto);
+
             $thumbnailService::create(
                 str_replace(
                     '.',
@@ -140,6 +141,8 @@ final class Upload implements ModelInterface
                 $fileContent,
                 $filesystem
             );
+
+            $this->em->flush();
         } catch (\Throwable $e) {
             $filesystem->delete($file->getTargetPath());
             throw $e;

@@ -47,7 +47,7 @@ final class Download implements ModelInterface
             } catch (\Exception $e) {
                 /** @var File $image */
                 $image = $form->getElement('image');
-                $image->setRuleError(htmlspecialchars($e->getMessage()));
+                $image->setRuleError(htmlspecialchars(sprintf('%s: %s', get_class($e), $e->getMessage())));
             }
         }
 
@@ -114,6 +114,7 @@ final class Download implements ModelInterface
                 $fileContent,
                 $filesystem
             );
+            $this->em->flush();
         } catch (\Exception $e) {
             $filesystem->delete($targetPath);
             throw $e;
