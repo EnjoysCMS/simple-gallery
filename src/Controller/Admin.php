@@ -11,9 +11,8 @@ use EnjoysCMS\Module\SimpleGallery\Admin\Index;
 use EnjoysCMS\Module\SimpleGallery\Admin\UpdateDescription;
 use EnjoysCMS\Module\SimpleGallery\Admin\UpdateTitle;
 use EnjoysCMS\Module\SimpleGallery\Admin\Upload;
+use EnjoysCMS\Module\SimpleGallery\Admin\UploadDropzone;
 use Exception;
-use HttpSoft\Emitter\EmitterInterface;
-use HttpSoft\Message\Response;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Routing\Annotation\Route;
@@ -53,6 +52,21 @@ final class Admin extends AdminBaseController
         return $this->responseText($this->view(
             '@simple-gallery/admin/upload.twig',
             $this->getContext($this->container->get(Upload::class))
+        ));
+    }
+
+    #[Route(
+        path: '/admin/gallery/upload-dropzone',
+        name: 'admin/gallery/upload-dropzone',
+        options: [
+            'aclComment' => '[Admin][Simple Gallery] Загрузка изображений'
+        ]
+    )]
+    public function uploadDropzone(): ResponseInterface
+    {
+        return $this->responseText($this->view(
+            '@simple-gallery/admin/upload_dropzone.twig',
+            $this->getContext($this->container->get(UploadDropzone::class))
         ));
     }
 
