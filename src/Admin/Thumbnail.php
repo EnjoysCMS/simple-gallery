@@ -7,14 +7,14 @@ namespace EnjoysCMS\Module\SimpleGallery\Admin;
 
 
 use Intervention\Image\ImageManagerStatic;
+use League\Flysystem\FilesystemOperator;
 
-final class Thumbnail
+final class Thumbnail implements ThumbnailServiceInterface
 {
-    public static function create(string $originalPath)
+    public static function create(string $thumbFilename, string $content, FilesystemOperator $filesystem)
     {
-        $file = pathinfo($originalPath);
-        $imgSmall = ImageManagerStatic::make($originalPath);
-        $imgSmall->resize(
+        $image = ImageManagerStatic::make($content);
+        $image->resize(
             300,
             300,
             function ($constraint) {
@@ -23,7 +23,7 @@ final class Thumbnail
             }
         );
 
-
-        $imgSmall->save($file['dirname'] . '/' . $file['filename'] . '_thumb' . '.' . $file['extension']);
+        $filesystem->write($thumbFilename, $image->encode()->getEncoded());
     }
+
 }

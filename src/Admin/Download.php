@@ -76,9 +76,10 @@ final class Download implements ModelInterface
      */
     private function doAction()
     {
-
         $storage = $this->config->getStorageUpload();
         $filesystem = $storage->getFileSystem();
+        $thumbnailService = $this->config->getModuleConfig()->get('thumbnailService');
+
 
         $client = new Client(
             [
@@ -103,7 +104,15 @@ final class Download implements ModelInterface
 
         try {
             new WriteImage($this->em, $imageDto);
-//            Thumbnail::create($targetPath);
+            $thumbnailService::create(
+                str_replace(
+                    '.',
+                    '_thumb.',
+                    $targetPath
+                ),
+                $fileContent,
+                $filesystem
+            );
         } catch (\Exception $e) {
             $filesystem->delete($targetPath);
             throw $e;

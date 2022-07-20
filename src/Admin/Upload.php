@@ -111,7 +111,8 @@ final class Upload implements ModelInterface
     {
         $storage = $this->config->getStorageUpload();
         $filesystem = $storage->getFileSystem();
-      //  $targetPath = $this->getUploadSubDir() . $this->getNewFilename();
+        $thumbnailService = $this->config->getModuleConfig()->get('thumbnailService');
+
 
         $file = new \Enjoys\Upload\File($uploadedFile, $filesystem);
         $file->setFilename($this->getNewFilename());
@@ -128,7 +129,15 @@ final class Upload implements ModelInterface
 
         try {
             new WriteImage($this->em, $imageDto);
-        //    Thumbnail::create($fileStorage->getTargetPath());
+            $thumbnailService::create(
+                str_replace(
+                    '.',
+                    '_thumb.',
+                    $file->getTargetPath()
+                ),
+                $fileContent,
+                $filesystem
+            );
         } catch (\Throwable $e) {
             $filesystem->delete($file->getTargetPath());
             throw $e;

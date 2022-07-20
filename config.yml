@@ -1,4 +1,5 @@
 uploadStorage: local
+thumbnailService: \EnjoysCMS\Module\SimpleGallery\Admin\Thumbnail
 storageList:
   local:
     \EnjoysCMS\Core\StorageUpload\Local:
