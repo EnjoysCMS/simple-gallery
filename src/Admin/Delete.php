@@ -86,6 +86,13 @@ final class Delete implements ModelInterface
 
         try {
             $filesystem->delete($this->image->getFilename());
+            $filesystem->delete(
+                str_replace(
+                    '.',
+                    '_thumb.',
+                    $this->image->getFilename()
+                )
+            );
         } catch (\TypeError) {
         }
 
