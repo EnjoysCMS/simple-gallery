@@ -101,6 +101,7 @@ final class Download implements ModelInterface
             $targetPath,
             $hash
         );
+        $imageDto->storage = $this->config->getModuleConfig()->get('uploadStorage');
 
         try {
             new WriteImage($this->em, $imageDto);

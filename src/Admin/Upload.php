@@ -127,6 +127,8 @@ final class Upload implements ModelInterface
             $file->getOriginalFilename()
         );
 
+        $imageDto->storage = $this->config->getModuleConfig()->get('uploadStorage');
+
         try {
             new WriteImage($this->em, $imageDto);
             $thumbnailService::create(

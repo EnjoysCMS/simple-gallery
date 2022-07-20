@@ -99,7 +99,7 @@ final class Image
      * @var string
      * @ORM\Column(type="string", length=50, options={"default": "local"})
      */
-    private string $storage = "local";
+    private string $storage;
 
     public function getStorage(): string
     {
