@@ -111,6 +111,7 @@ final class Upload implements ModelInterface
     {
         $storage = $this->config->getStorageUpload();
         $filesystem = $storage->getFileSystem();
+        /** @var class-string<ThumbnailServiceInterface> $thumbnailService */
         $thumbnailService = $this->config->getModuleConfig()->get('thumbnailService');
 
 
@@ -127,10 +128,9 @@ final class Upload implements ModelInterface
 
             $imageDto = new ImageDto(
                 $file->getTargetPath(),
-                $hash,
-                $file->getOriginalFilename()
+                $hash
             );
-
+            $imageDto->title = rtrim($file->getOriginalFilename(), $file->getExtensionWithDot());
             $imageDto->storage = $this->config->getModuleConfig()->get('uploadStorage');
 
             new WriteImage($this->em, $imageDto);
