@@ -38,7 +38,6 @@ final class ViewGallery extends BaseController
     {
         $images = $em->getRepository(Image::class)->findAll();
 
-
         $template_path = '@m/simple-gallery/view_gallery.twig';
 
         if (!$twig->getLoader()->exists($template_path)) {
@@ -47,7 +46,7 @@ final class ViewGallery extends BaseController
 
         return $this->responseText($twig->render($template_path, [
             'images' => $images,
-            'config' => $config->getModuleConfig()->asArray()
+            'config' => $config
         ]));
     }
 }

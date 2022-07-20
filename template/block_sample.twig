@@ -1,1 +1,13 @@
+<div class="gallery">
+    {% for image in images %}
+        <div>
+            <a href="{{ config.getStorageUpload(image.storage).url(image.filename) }}">
+                <img src="{{ config.getStorageUpload(image.storage).url(image.filename|replace({'.': '_thumb.'})) }}"
+                     alt="">
+            </a>
+            <div class="title">{{ image.title }}</div>
+            <div class="description">{{ image.description }}</div>
+        </div>
+    {% endfor %}
+</div>
 {{ dump(images, config, options) }}
