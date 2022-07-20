@@ -47,7 +47,7 @@ final class Download implements ModelInterface
             } catch (\Exception $e) {
                 /** @var File $image */
                 $image = $form->getElement('image');
-                $image->setRuleError($e->getMessage());
+                $image->setRuleError(htmlspecialchars($e->getMessage()));
             }
         }
 
