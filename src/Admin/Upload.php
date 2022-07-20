@@ -71,7 +71,7 @@ final class Upload implements ModelInterface
                 Rules::UPLOAD,
                 [
                     'required',
-                    'maxsize' => 1024 * 1024 * 2,
+                    'maxsize' => 1024 * 1024 * 10,
                     'extensions' => 'jpg, png, jpeg',
                 ]
             )
@@ -120,6 +120,9 @@ final class Upload implements ModelInterface
             $file->upload($this->getUploadSubDir());
 
             $fileContent = $filesystem->read($file->getTargetPath());
+
+            $this->checkMemory($fileContent);
+
             $hash = md5($fileContent);
 
             $imageDto = new ImageDto(
@@ -158,6 +161,33 @@ final class Upload implements ModelInterface
     private function getNewFilename(): ?string
     {
         return uniqid('image');
+    }
+
+    private function checkMemory(string $fileContent)
+    {
+        $memoryLimit = (int)ini_get('memory_limit') * pow(1024, 2);
+        $imageInfo = getimagesizefromstring($fileContent);
+        $memoryNeeded = round(
+            ($imageInfo[0] * $imageInfo[1] * $imageInfo['bits'] * $imageInfo['channels'] / 8 + Pow(2, 16)) * 1.65
+        );
+        if (function_exists('memory_get_usage') && memory_get_usage() + $memoryNeeded > $memoryLimit) {
+            if (!$this->config->getModuleConfig()->get('allocatedMemoryDynamically')) {
+                throw new \RuntimeException(
+                    sprintf(
+                        'The allocated memory (%s MiB) is not enough for image processing. Needed: %s MiB',
+                        $memoryLimit / pow(1024, 2),
+                        ceil((memory_get_usage() + $memoryNeeded) / pow(1024, 2))
+                    )
+                );
+            }
+
+            ini_set(
+                'memory_limit',
+                (integer)ini_get('memory_limit') + ceil(
+                    (memory_get_usage() + $memoryNeeded) / pow(1024, 2)
+                ) . 'M'
+            );
+        }
     }
 
 

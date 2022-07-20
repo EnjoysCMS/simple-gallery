@@ -1,3 +1,4 @@
+allocatedMemoryDynamically: false
 uploadStorage: local
 thumbnailService: \EnjoysCMS\Module\SimpleGallery\Admin\Thumbnail
 storageList:
