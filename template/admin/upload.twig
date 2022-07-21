@@ -1,10 +1,21 @@
 {% extends '@a/layout.twig' %}
 {% block content %}
-    {% do asset('js', ['modules/admin/node_modules/bs-custom-file-input/dist/bs-custom-file-input.min.js']) %}
+    {% do asset('js', [
+        'modules/admin/node_modules/bs-custom-file-input/dist/bs-custom-file-input.min.js',
+        'modules/simple-gallery/node_modules/dropzone/dist/dropzone-min.js',
+    ]) %}
+    {% do asset('css', [
+        'modules/simple-gallery/node_modules/dropzone/dist/dropzone.css',
+    ]) %}
     <script>
         $(document).ready(function () {
             bsCustomFileInput.init()
         })
+
+        const dropzone = new Dropzone("#upload-dropzone", {
+            'paramName': 'image',
+            'dictDefaultMessage': 'Перетащите сюда файлы для загрузки или нажмите для выбора'
+        });
     </script>
 
     <section class="content">
@@ -16,7 +27,21 @@
             </div>
             <!-- /.card-header -->
             <div class="card-body">
-                {{ form|raw }}
+
+                <a class="btn btn-outline-dark" href="{{ path('admin/gallery/upload') }}"><i class="fa fa-upload"></i>
+                    Загрузить с компьютера</a>
+                <a class="btn btn-outline-dark" href="{{ path('admin/gallery/download') }}"><i class="fa fa-globe"></i>
+                    Загрузить из интернета</a>
+
+                <div class="my-3">
+                    <h4>Загрузить с помощью dropzone.js (рекомендуется)</h4>
+                    <form action="{{ path('admin/gallery/upload-dropzone') }}" class="dropzone" id="upload-dropzone">
+                    </form>
+                </div>
+                <div class="my-3">
+                    <h4>...или загрузить стандартно</h4>
+                    {{ form|raw }}
+                </div>
             </div>
             <!-- /.card-body -->
         </div>

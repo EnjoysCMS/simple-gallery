@@ -12,6 +12,7 @@ use EnjoysCMS\Module\SimpleGallery\Admin\UpdateDescription;
 use EnjoysCMS\Module\SimpleGallery\Admin\UpdateTitle;
 use EnjoysCMS\Module\SimpleGallery\Admin\Upload;
 use EnjoysCMS\Module\SimpleGallery\Admin\UploadDropzone;
+use EnjoysCMS\Module\SimpleGallery\Admin\UploadHandler;
 use Exception;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -34,10 +35,12 @@ final class Admin extends AdminBaseController
     )]
     public function index(): ResponseInterface
     {
-        return $this->responseText($this->view(
-            '@simple-gallery/admin/index.twig',
-            $this->getContext($this->container->get(Index::class))
-        ));
+        return $this->responseText(
+            $this->view(
+                '@simple-gallery/admin/index.twig',
+                $this->getContext($this->container->get(Index::class))
+            )
+        );
     }
 
     #[Route(
@@ -49,25 +52,30 @@ final class Admin extends AdminBaseController
     )]
     public function upload(): ResponseInterface
     {
-        return $this->responseText($this->view(
-            '@simple-gallery/admin/upload.twig',
-            $this->getContext($this->container->get(Upload::class))
-        ));
+        return $this->responseText(
+            $this->view(
+                '@simple-gallery/admin/upload.twig',
+                $this->getContext($this->container->get(Upload::class))
+            )
+        );
     }
 
     #[Route(
         path: '/admin/gallery/upload-dropzone',
         name: 'admin/gallery/upload-dropzone',
         options: [
-            'aclComment' => '[Admin][Simple Gallery] Загрузка изображений'
+            'aclComment' => '[Admin][Simple Gallery] Загрузка изображений с помощью dropzone.js'
         ]
     )]
-    public function uploadDropzone(): ResponseInterface
+    public function uploadDropzone(UploadHandler $uploadHandler): ResponseInterface
     {
-        return $this->responseText($this->view(
-            '@simple-gallery/admin/upload_dropzone.twig',
-            $this->getContext($this->container->get(UploadDropzone::class))
-        ));
+        try {
+            $uploadHandler->upload();
+        } catch (\Throwable $e) {
+            $this->response = $this->response->withStatus(500);
+            $errorMessage = htmlspecialchars(sprintf('%s: %s', get_class($e), $e->getMessage()));
+        }
+        return $this->responseJson($errorMessage ?? 'uploaded');
     }
 
     #[Route(
@@ -79,10 +87,12 @@ final class Admin extends AdminBaseController
     )]
     public function download(): ResponseInterface
     {
-        return $this->responseText($this->view(
-            '@simple-gallery/admin/upload.twig',
-            $this->getContext($this->container->get(Download::class))
-        ));
+        return $this->responseText(
+            $this->view(
+                '@simple-gallery/admin/upload.twig',
+                $this->getContext($this->container->get(Download::class))
+            )
+        );
     }
 
     #[Route(
@@ -94,10 +104,12 @@ final class Admin extends AdminBaseController
     )]
     public function delete(): ResponseInterface
     {
-        return $this->responseText($this->view(
-            '@simple-gallery/admin/delete.twig',
-            $this->getContext($this->container->get(Delete::class))
-        ));
+        return $this->responseText(
+            $this->view(
+                '@simple-gallery/admin/delete.twig',
+                $this->getContext($this->container->get(Delete::class))
+            )
+        );
     }
 
     #[Route(
