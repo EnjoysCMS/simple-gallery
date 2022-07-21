@@ -115,7 +115,7 @@ final class UploadHandler
         $memoryLimit = (int)ini_get('memory_limit') * pow(1024, 2);
         $imageInfo = getimagesizefromstring($fileContent);
         $memoryNeeded = round(
-            ($imageInfo[0] * $imageInfo[1] * $imageInfo['bits'] * $imageInfo['channels'] / 8 + Pow(2, 16)) * 1.65
+            ($imageInfo[0] * $imageInfo[1] * ($imageInfo['bits'] ?? 1) * ($imageInfo['channels'] ?? 1) / 8 + Pow(2, 16)) * 1.65
         );
         if (function_exists('memory_get_usage') && memory_get_usage() + $memoryNeeded > $memoryLimit) {
             if (!$this->config->getModuleConfig()->get('allocatedMemoryDynamically')) {
