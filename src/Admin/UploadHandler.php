@@ -11,6 +11,9 @@ use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\OptimisticLockException;
 use Enjoys\ServerRequestWrapperInterface;
 use Enjoys\Upload\File;
+use Enjoys\Upload\Rule\Extension;
+use Enjoys\Upload\Rule\Size;
+use Enjoys\Upload\UploadProcessing;
 use EnjoysCMS\Module\SimpleGallery\Config;
 use League\Flysystem\FilesystemException;
 use Psr\Http\Message\UploadedFileInterface;
@@ -59,10 +62,18 @@ final class UploadHandler
         /** @var class-string<ThumbnailServiceInterface> $thumbnailService */
         $thumbnailService = $this->config->getModuleConfig()->get('thumbnailService');
 
+        $sizeRule = new Size();
+        $sizeRule->setMaxSize(3 * 1024 * 1024);
+
+        $extensionRule = new Extension();
+        $extensionRule->allow('jpg, png, jpeg');
 
         try {
-            $file = new File($uploadedFile, $filesystem);
+            $file = new UploadProcessing($uploadedFile, $filesystem);
             $file->setFilename($this->getNewFilename());
+
+            $file->addRules([$sizeRule, $extensionRule]);
+
             $file->upload($this->getUploadSubDir());
 
             $fileContent = $filesystem->read($file->getTargetPath());
