@@ -18,7 +18,7 @@
         "php": ">= 8.0",
         "enjoyscms/core": "^4.0",
         "enjoyscms/admin": "^4.0",
-        "enjoys/upload": "^2.0",
+        "enjoys/upload": "^3.0",
         "intervention/image": "^2.6",
         "beberlei/doctrineextensions": "^1.3"
     },
