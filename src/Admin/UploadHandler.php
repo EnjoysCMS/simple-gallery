@@ -10,7 +10,6 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\OptimisticLockException;
 use Enjoys\ServerRequestWrapperInterface;
-use Enjoys\Upload\File;
 use Enjoys\Upload\Rule\Extension;
 use Enjoys\Upload\Rule\Size;
 use Enjoys\Upload\UploadProcessing;
@@ -86,7 +85,7 @@ final class UploadHandler
                 $file->getTargetPath(),
                 $hash
             );
-            $imageDto->title = rtrim($file->getOriginalFilename(), $file->getExtensionWithDot());
+            $imageDto->title = rtrim($file->getFileInfo()->getOriginalFilename(), $file->getFileInfo()->getExtensionWithDot());
             $imageDto->storage = $this->config->getModuleConfig()->get('uploadStorage');
 
             new WriteImage($this->em, $imageDto);
