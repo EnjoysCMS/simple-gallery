@@ -67,8 +67,10 @@ final class UploadHandler
         $extensionRule = new Extension();
         $extensionRule->allow('jpg, png, jpeg');
 
+        $file = new UploadProcessing($uploadedFile, $filesystem);
+
         try {
-            $file = new UploadProcessing($uploadedFile, $filesystem);
+
             $file->setFilename($this->getNewFilename());
 
             $file->addRules([$sizeRule, $extensionRule]);
@@ -102,7 +104,10 @@ final class UploadHandler
 
             $this->em->flush();
         } catch (\Throwable $e) {
-            $filesystem->delete((string)$file->getTargetPath());
+            if (null !== $location = $file->getTargetPath()){
+                $filesystem->delete($location);
+            }
+
             throw $e;
         }
     }
