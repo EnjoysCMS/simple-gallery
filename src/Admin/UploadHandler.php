@@ -62,15 +62,16 @@ final class UploadHandler
         $thumbnailService = $this->config->getModuleConfig()->get('thumbnailService');
 
         $sizeRule = new Size();
-        $sizeRule->setMaxSize(3 * 1024 * 1024);
+        $sizeRule->setMaxSize($this->config->getModuleConfig()->get('uploadRules')['maxSize'] ?? 1024 * 1024);
 
         $extensionRule = new Extension();
-        $extensionRule->allow('jpg, png, jpeg');
+        $extensionRule->allow(
+            $this->config->getModuleConfig()->get('uploadRules')['allowedExtensions'] ?? 'jpg, png, jpeg'
+        );
 
         $file = new UploadProcessing($uploadedFile, $filesystem);
 
         try {
-
             $file->setFilename($this->getNewFilename());
 
             $file->addRules([$sizeRule, $extensionRule]);
@@ -87,7 +88,10 @@ final class UploadHandler
                 $file->getTargetPath(),
                 $hash
             );
-            $imageDto->title = rtrim($file->getFileInfo()->getOriginalFilename(), $file->getFileInfo()->getExtensionWithDot());
+            $imageDto->title = rtrim(
+                $file->getFileInfo()->getOriginalFilename(),
+                $file->getFileInfo()->getExtensionWithDot()
+            );
             $imageDto->storage = $this->config->getModuleConfig()->get('uploadStorage');
 
             new WriteImage($this->em, $imageDto);
@@ -104,7 +108,7 @@ final class UploadHandler
 
             $this->em->flush();
         } catch (\Throwable $e) {
-            if (null !== $location = $file->getTargetPath()){
+            if (null !== $location = $file->getTargetPath()) {
                 $filesystem->delete($location);
             }
 

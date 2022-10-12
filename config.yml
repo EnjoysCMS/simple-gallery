@@ -9,3 +9,10 @@ storageList:
       permissionMap:
         dir:
           private: 0755
+
+uploadRules:
+  maxSize: 3145728
+  allowedExtensions:
+    - jpg
+    - png
+    - jpeg

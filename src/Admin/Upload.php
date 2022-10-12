@@ -14,6 +14,7 @@ use Enjoys\Forms\Interfaces\RendererInterface;
 use Enjoys\Forms\Rules;
 use EnjoysCMS\Core\Components\Helpers\Redirect;
 use EnjoysCMS\Module\Admin\Core\ModelInterface;
+use EnjoysCMS\Module\SimpleGallery\Config;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 final class Upload implements ModelInterface
@@ -22,7 +23,8 @@ final class Upload implements ModelInterface
     public function __construct(
         private UploadHandler $uploadHandler,
         private RendererInterface $renderer,
-        private UrlGeneratorInterface $urlGenerator
+        private UrlGeneratorInterface $urlGenerator,
+        private Config $config
     ) {
         //  dd($this->config->getStorageUpload()->getFileSystem());
     }
@@ -57,6 +59,17 @@ final class Upload implements ModelInterface
      */
     private function getForm(): Form
     {
+        $extensionWithoutDot = implode(
+            ', ',
+            (array)($this->config->getModuleConfig()->get('uploadRules')['allowedExtensions'] ?? 'jpg, png, jpeg')
+        );
+        $extensionWithDot = implode(
+            ', ',
+            array_map(function ($ext) {
+                return '.' . $ext;
+            }, explode(', ', $extensionWithoutDot))
+        );
+
         $form = new Form();
         $form->file('image', 'Изображение')
             ->setMultiple()
@@ -64,11 +77,11 @@ final class Upload implements ModelInterface
                 Rules::UPLOAD,
                 [
                     'required',
-                    'maxsize' => 1024 * 1024 * 10,
-                    'extensions' => 'jpg, png, jpeg',
+                    'maxsize' => $this->config->getModuleConfig()->get('uploadRules')['maxSize'] ?? 1024 * 1024,
+                    'extensions' => $extensionWithoutDot,
                 ]
             )
-            ->setAttribute(AttributeFactory::create('accept', '.png, .jpg, .jpeg'))
+            ->setAttribute(AttributeFactory::create('accept', $extensionWithDot))
         ;
 
         $form->submit('upload', 'Загрузить');
