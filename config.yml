@@ -16,3 +16,5 @@ uploadRules:
     - jpg
     - png
     - jpeg
+
+perPageLimit: 10
