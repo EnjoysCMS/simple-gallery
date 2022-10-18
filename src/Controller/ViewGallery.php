@@ -23,7 +23,7 @@ use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 
 #[Route(
-    path: 'gallery/{page}',
+    path: 'gallery@{page}',
     name: 'gallery',
     requirements: [
         'page' => '\d+'
