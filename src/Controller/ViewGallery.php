@@ -122,6 +122,7 @@ final class ViewGallery extends BaseController
             'images' => array_map(function ($image) {
                 /** @var Image $image */
                 return [
+                    'id' => $image->getId(),
                     'src' => $this->config->getStorageUpload($image->getStorage())->getUrl($image->getFilename()),
                     'thumb' => $this->config->getStorageUpload($image->getStorage())->getUrl(
                         str_replace('.', '_thumb.', $image->getFilename())
