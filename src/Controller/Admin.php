@@ -27,10 +27,16 @@ final class Admin extends AdminBaseController
     }
 
     #[Route(
-        path: '/admin/gallery',
+        path: '/admin/gallery@{page}',
         name: 'admin/gallery',
+        requirements: [
+            'page' => '\d+'
+        ],
         options: [
             'aclComment' => '[Admin][Simple Gallery] Просмотр всех изображений'
+        ],
+        defaults: [
+            'page' => 1,
         ]
     )]
     public function index(): ResponseInterface
