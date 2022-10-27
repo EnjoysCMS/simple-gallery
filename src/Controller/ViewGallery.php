@@ -69,7 +69,13 @@ final class ViewGallery extends BaseController
             $this->config->getModuleConfig()->get('perPageLimit', false)
         );
 
-        $paginator = new Paginator($this->repository->getOffsetItemsQueryBuilder($pagination));
+        $paginator = new Paginator(
+            $this->repository->getOffsetItemsQueryBuilder(
+                $pagination,
+                $this->config->getModuleConfig()->get('order')[0] ?? 'id',
+                $this->config->getModuleConfig()->get('order')[1] ?? 'asc'
+            )
+        );
         $pagination->setTotalItems($paginator->count());
 
         $template_path = '@m/simple-gallery/view_gallery.twig';

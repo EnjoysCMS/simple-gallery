@@ -14,10 +14,14 @@ use EnjoysCMS\Core\Components\Pagination\Pagination;
 
 final class ImageRepository extends EntityRepository
 {
-    public function getOffsetItemsQueryBuilder(Pagination $pagination): QueryBuilder
-    {
-        return  $this->createQueryBuilder('i')
+    public function getOffsetItemsQueryBuilder(
+        Pagination $pagination,
+        string $orderField = 'id',
+        string $orderDirection = 'asc'
+    ): QueryBuilder {
+        return $this->createQueryBuilder('i')
             ->select('i')
+            ->orderBy(sprintf('i.%s', $orderField), $orderDirection)
             ->setFirstResult($pagination->getOffset())
             ->setMaxResults(
                 $pagination->getLimitItems()
@@ -27,7 +31,7 @@ final class ImageRepository extends EntityRepository
 
     public function getOffsetItemsQuery(Pagination $pagination): Query
     {
-        return  $this->getOffsetItemsQueryBuilder($pagination)->getQuery();
+        return $this->getOffsetItemsQueryBuilder($pagination)->getQuery();
     }
 
     public function getOffsetItems(Pagination $pagination, $hydrationMode = AbstractQuery::HYDRATE_OBJECT)
