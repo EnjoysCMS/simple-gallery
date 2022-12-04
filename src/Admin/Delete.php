@@ -12,11 +12,11 @@ use Doctrine\ORM\ORMException;
 use Enjoys\Forms\Elements\File;
 use Enjoys\Forms\Form;
 use Enjoys\Forms\Interfaces\RendererInterface;
-use Enjoys\ServerRequestWrapperInterface;
 use EnjoysCMS\Core\Components\Helpers\Redirect;
 use EnjoysCMS\Module\Admin\Core\ModelInterface;
 use EnjoysCMS\Module\SimpleGallery\Config;
 use EnjoysCMS\Module\SimpleGallery\Entities\Image;
+use Psr\Http\Message\ServerRequestInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 final class Delete implements ModelInterface
@@ -26,13 +26,13 @@ final class Delete implements ModelInterface
 
     public function __construct(
         private EntityManager $entityManager,
-        private ServerRequestWrapperInterface $request,
+        private ServerRequestInterface $request,
         private RendererInterface $renderer,
         private UrlGeneratorInterface $urlGenerator,
         private Config $config
     ) {
         $image = $this->entityManager->getRepository(Image::class)->findOneBy(
-            ['id' => $this->request->getQueryData('id', 0)]
+            ['id' => $this->request->getQueryParams()['id'] ?? 0]
         );
         if ($image === null) {
             throw new \InvalidArgumentException('Нет изображения с таким id');

@@ -14,19 +14,19 @@ use Enjoys\Forms\Exception\ExceptionRule;
 use Enjoys\Forms\Form;
 use Enjoys\Forms\Interfaces\RendererInterface;
 use Enjoys\Forms\Rules;
-use Enjoys\ServerRequestWrapperInterface;
 use EnjoysCMS\Core\Components\Helpers\Redirect;
 use EnjoysCMS\Module\Admin\Core\ModelInterface;
 use EnjoysCMS\Module\SimpleGallery\Config;
 use GuzzleHttp\Client;
 use GuzzleHttp\RequestOptions;
+use Psr\Http\Message\ServerRequestInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 final class Download implements ModelInterface
 {
 
     public function __construct(
-        private ServerRequestWrapperInterface $request,
+        private ServerRequestInterface $request,
         private EntityManager $em,
         private RendererInterface $renderer,
         private UrlGeneratorInterface $urlGenerator,
@@ -87,7 +87,7 @@ final class Download implements ModelInterface
                 RequestOptions::IDN_CONVERSION => true
             ]
         );
-        $response = $client->get($this->request->getPostData('image'));
+        $response = $client->get($this->request->getParsedBody()['image'] ?? null);
         $data = $response->getBody()->getContents();
         $extension = $this->getExt($response->getHeaderLine('Content-Type'));
         $targetPath = $this->getUploadSubDir() . '/' . $this->getNewFilename() . '.' . $extension;

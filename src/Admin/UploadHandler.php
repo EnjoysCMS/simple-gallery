@@ -9,18 +9,18 @@ namespace EnjoysCMS\Module\SimpleGallery\Admin;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\OptimisticLockException;
-use Enjoys\ServerRequestWrapperInterface;
 use Enjoys\Upload\Rule\Extension;
 use Enjoys\Upload\Rule\Size;
 use Enjoys\Upload\UploadProcessing;
 use EnjoysCMS\Module\SimpleGallery\Config;
 use League\Flysystem\FilesystemException;
+use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UploadedFileInterface;
 
 final class UploadHandler
 {
     public function __construct(
-        private ServerRequestWrapperInterface $request,
+        private ServerRequestInterface $request,
         private EntityManager $em,
         private Config $config
     ) {
@@ -35,7 +35,7 @@ final class UploadHandler
     public function upload(): void
     {
         /** @var UploadedFileInterface|UploadedFileInterface[] $file */
-        $file = $this->request->getFilesData('image');
+        $file = $this->request->getUploadedFiles()['image'] ?? null;
 
         if (is_array($file)) {
             foreach ($file as $item) {

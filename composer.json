@@ -16,7 +16,7 @@
     ],
     "require": {
         "php": ">= 8.0",
-        "enjoyscms/core": "^4.0",
+        "enjoyscms/core": "^4.5",
         "enjoyscms/admin": "^4.0",
         "enjoys/upload": "^3.0",
         "intervention/image": "^2.6",
