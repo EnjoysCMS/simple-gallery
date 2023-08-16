@@ -10,7 +10,7 @@ use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
-use EnjoysCMS\Core\Components\Pagination\Pagination;
+use EnjoysCMS\Core\Pagination\Pagination;
 
 final class ImageRepository extends EntityRepository
 {

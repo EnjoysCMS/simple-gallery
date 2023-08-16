@@ -9,7 +9,7 @@
                         'comment': item.innerText,
                         'id': item.getAttribute('data-id')
                     }
-                    fetch('{{ path('admin/gallery/updateDescription') }}', {
+                    fetch('{{ path('@gallery_update_description') }}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json;charset=utf-8',
@@ -28,7 +28,7 @@
                         'comment': item.innerText,
                         'id': item.getAttribute('data-id')
                     }
-                    fetch('{{ path('admin/gallery/updateTitle') }}', {
+                    fetch('{{ path('@gallery_update_title') }}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json;charset=utf-8',
@@ -50,9 +50,9 @@
             </div>
             <!-- /.card-header -->
             <div class="card-body">
-                <a class="btn btn-outline-dark" href="{{ path('admin/gallery/upload') }}"><i class="fa fa-upload"></i>
+                <a class="btn btn-outline-dark" href="{{ path('@gallery_upload') }}"><i class="fa fa-upload"></i>
                     Загрузить с компьютера</a>
-                <a class="btn btn-outline-dark" href="{{ path('admin/gallery/download') }}"><i class="fa fa-globe"></i>
+                <a class="btn btn-outline-dark" href="{{ path('@gallery_download') }}"><i class="fa fa-globe"></i>
                     Загрузить из интернета</a>
                 <div class="row mt-3">
                     {% for image in images %}
@@ -75,7 +75,7 @@
                             </div>
                             <div>
                                 <a class="btn btn-sm btn-danger my-3"
-                                   href="{{ path('admin/gallery/delete', {"id": image.getId}) }}">удалить</a>
+                                   href="{{ path('@gallery_delete', {"id": image.getId}) }}">удалить</a>
                             </div>
                         </div>
                     {% endfor %}

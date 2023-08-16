@@ -5,40 +5,44 @@ declare(strict_types=1);
 
 namespace EnjoysCMS\Module\SimpleGallery\Controller;
 
+use DI\Container;
+use DI\DependencyException;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Exception\NotSupported;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ObjectRepository;
-use EnjoysCMS\Core\BaseController;
-use EnjoysCMS\Core\Components\Helpers\Setting;
-use EnjoysCMS\Core\Components\Pagination\Pagination;
+use EnjoysCMS\Core\AbstractController;
 use EnjoysCMS\Core\Exception\NotFoundException;
+use EnjoysCMS\Core\Pagination\Pagination;
+use EnjoysCMS\Core\Routing\Annotation\Route;
 use EnjoysCMS\Module\SimpleGallery\Config;
 use EnjoysCMS\Module\SimpleGallery\Entities\Image;
 use EnjoysCMS\Module\SimpleGallery\Entities\ImageRepository;
-use Psr\Container\ContainerExceptionInterface;
-use Psr\Container\NotFoundExceptionInterface;
+use Exception;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Symfony\Component\Routing\Annotation\Route;
 use Twig\Environment;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 
-
-final class ViewGallery extends BaseController
+#[Route('gallery', 'gallery_')]
+final class ViewGallery extends AbstractController
 {
 
     private ImageRepository|ObjectRepository|EntityRepository $repository;
 
+    /**
+     * @throws NotSupported
+     * @throws DependencyException
+     * @throws \DI\NotFoundException
+     */
     public function __construct(
-        private EntityManager $em,
-        private Config $config,
-        private ServerRequestInterface $request,
-        ResponseInterface $response = null
+        Container $container,
+        private readonly EntityManager $em,
+        private readonly Config $config,
     ) {
-        parent::__construct($response);
+        parent::__construct($container);
         $this->repository = $this->em->getRepository(Image::class);
     }
 
@@ -47,33 +51,31 @@ final class ViewGallery extends BaseController
      * @throws RuntimeError
      * @throws LoaderError
      * @throws NotFoundException
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route(
-        path: 'gallery@{page}',
-        name: 'gallery',
+        path: '@{page}',
+        name: 'show',
         requirements: [
             'page' => '\d+'
         ],
-        options: [
-            'aclComment' => '[Public] Просмотр изображений'
-        ],
         defaults: [
             'page' => 1,
-        ]
+        ],
+        comment: 'Просмотр изображений'
     )]
     public function viewGallery(Environment $twig): ResponseInterface
     {
         $pagination = new Pagination(
             $this->request->getAttribute('page', 1),
-            $this->config->getModuleConfig()->get('perPageLimit', false)
+            $this->config->get('perPageLimit', false)
         );
 
         $paginator = new Paginator(
             $this->repository->getOffsetItemsQueryBuilder(
                 $pagination,
-                $this->config->getModuleConfig()->get('order')[0] ?? 'id',
-                $this->config->getModuleConfig()->get('order')[1] ?? 'asc'
+                $this->config->get('order->0', 'id'),
+                $this->config->get('order->1', 'asc')
             )
         );
         $pagination->setTotalItems($paginator->count());
@@ -84,11 +86,11 @@ final class ViewGallery extends BaseController
             $template_path = __DIR__ . '/../../template/view_gallery.twig';
         }
 
-        return $this->responseText(
+        return $this->response(
             $twig->render($template_path, [
                 '_title' => sprintf(
                     'Фотогалерея [стр. %2$s] - %1$s',
-                    Setting::get('sitename'),
+                    $this->setting->get('sitename'),
                     $pagination->getCurrentPage()
                 ),
                 'images' => $paginator->getIterator(),
@@ -100,14 +102,12 @@ final class ViewGallery extends BaseController
 
     /**
      * @throws NotFoundException
-     * @throws \Exception
+     * @throws Exception
      */
     #[Route(
-        path: 'gallery.json',
-        name: 'gallery/json',
-        options: [
-            'comment' => '[Public] Просмотр изображений JSON'
-        ],
+        path: '.json',
+        name: 'json',
+        comment: 'Просмотр изображений JSON'
     )]
     public function viewGalleryJson(): ResponseInterface
     {
@@ -118,13 +118,13 @@ final class ViewGallery extends BaseController
 
         $pagination = new Pagination(
             $page,
-            $this->config->getModuleConfig()->get('perPageLimit', false)
+            $this->config->get('perPageLimit', false)
         );
 
         $paginator = new Paginator($this->repository->getOffsetItemsQueryBuilder($pagination));
         $pagination->setTotalItems($paginator->count());
 
-        return $this->responseJson([
+        return $this->json([
             'images' => array_map(function ($image) {
                 /** @var Image $image */
                 return [

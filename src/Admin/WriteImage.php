@@ -10,6 +10,7 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
 use EnjoysCMS\Module\SimpleGallery\Entities\Image;
+use Exception;
 
 final class WriteImage
 {
@@ -17,12 +18,14 @@ final class WriteImage
     /**
      * @throws OptimisticLockException
      * @throws ORMException
-     * @throws \Exception
+     * @throws Exception
      */
-    public function __construct(private EntityManager $entityManager, private ImageDto $imageDto)
-    {
+    public function __construct(
+        private readonly EntityManager $entityManager,
+        private readonly ImageDto $imageDto
+    ) {
         if (null !== $this->entityManager->getRepository(Image::class)->findOneBy(['hash' => $this->imageDto->hash])) {
-            throw new \Exception('Такое изображение уже есть');
+            throw new Exception('Такое изображение уже есть');
         }
 
         $image = new Image();

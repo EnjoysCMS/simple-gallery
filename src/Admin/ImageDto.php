@@ -8,7 +8,7 @@ namespace EnjoysCMS\Module\SimpleGallery\Admin;
 
 final class ImageDto
 {
-    public string $storage;
+    public string $storage = '';
 
     public function __construct(
         public string $filename,

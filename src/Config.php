@@ -4,42 +4,31 @@ declare(strict_types=1);
 
 namespace EnjoysCMS\Module\SimpleGallery;
 
-use DI\DependencyException;
-use DI\FactoryInterface;
-use DI\NotFoundException;
-use EnjoysCMS\Core\Components\Modules\ModuleConfig;
-use EnjoysCMS\Core\StorageUpload\StorageUploadInterface;
 
-final class Config
+use EnjoysCMS\Core\Modules\AbstractModuleConfig;
+use EnjoysCMS\Core\StorageUpload\StorageUploadInterface;
+use RuntimeException;
+
+final class Config extends AbstractModuleConfig
 {
 
-    private ModuleConfig $config;
 
-    /**
-     * @throws DependencyException
-     * @throws NotFoundException
-     */
-    public function __construct(FactoryInterface $factory)
+    public function getModulePackageName(): string
     {
-        $this->config = $factory->make(ModuleConfig::class, ['moduleName' => 'enjoyscms/simple-gallery']);
+        return 'enjoyscms/simple-gallery';
     }
-
-    public function getModuleConfig(): ModuleConfig
-    {
-        return $this->config;
-    }
-
 
     public function getStorageUpload(string $key = null): StorageUploadInterface
     {
-        $key = $key ?? $this->config->get('uploadStorage');
+        $key = $key ?? $this->get('uploadStorage');
 
-        $config = $this->config->get('storageList')[$key] ?? throw new \RuntimeException(
-                sprintf('Not set config `storageList.%s`', $key)
-            );
+        $config = $this->get(sprintf('storageList->%s', $key)) ?? throw new RuntimeException(
+            sprintf('Not set config `storageList->%s`', $key)
+        );
         /** @var class-string<StorageUploadInterface> $storageUploadClass */
         $storageUploadClass = key($config);
         return new $storageUploadClass(...current($config));
     }
+
 
 }

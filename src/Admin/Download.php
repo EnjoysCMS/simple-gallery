@@ -7,61 +7,32 @@ namespace EnjoysCMS\Module\SimpleGallery\Admin;
 
 
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\OptimisticLockException;
-use Doctrine\ORM\ORMException;
-use Enjoys\Forms\Elements\File;
 use Enjoys\Forms\Exception\ExceptionRule;
 use Enjoys\Forms\Form;
-use Enjoys\Forms\Interfaces\RendererInterface;
 use Enjoys\Forms\Rules;
-use EnjoysCMS\Core\Components\Helpers\Redirect;
-use EnjoysCMS\Module\Admin\Core\ModelInterface;
 use EnjoysCMS\Module\SimpleGallery\Config;
+use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\RequestOptions;
+use League\Flysystem\FilesystemException;
 use Psr\Http\Message\ServerRequestInterface;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
-final class Download implements ModelInterface
+final class Download
 {
 
     public function __construct(
-        private ServerRequestInterface $request,
-        private EntityManager $em,
-        private RendererInterface $renderer,
-        private UrlGeneratorInterface $urlGenerator,
-        private Config $config
+        private readonly EntityManager $em,
+        private readonly Config $config
     ) {
     }
 
-    /**
-     * @throws ExceptionRule
-     */
-    public function getContext(): array
-    {
-        $form = $this->getForm();
-
-        if ($form->isSubmitted()) {
-            try {
-                $this->doAction();
-            } catch (\Exception $e) {
-                /** @var File $image */
-                $image = $form->getElement('image');
-                $image->setRuleError(htmlspecialchars(sprintf('%s: %s', get_class($e), $e->getMessage())));
-            }
-        }
-
-        $this->renderer->setForm($form);
-
-        return [
-            'form' => $this->renderer->output()
-        ];
-    }
 
     /**
      * @throws ExceptionRule
      */
-    private function getForm(): Form
+    public function getForm(): Form
     {
         $form = new Form();
         $form->url('image', 'Изображение')->addRule(Rules::REQUIRED);
@@ -72,13 +43,14 @@ final class Download implements ModelInterface
     /**
      * @throws OptimisticLockException
      * @throws ORMException
-     * @throws \Exception
+     * @throws \Doctrine\ORM\ORMException
+     * @throws FilesystemException
      */
-    private function doAction()
+    public function doAction(ServerRequestInterface $request): void
     {
         $storage = $this->config->getStorageUpload();
         $filesystem = $storage->getFileSystem();
-        $thumbnailService = $this->config->getModuleConfig()->get('thumbnailService');
+        $thumbnailService = $this->config->get('thumbnailService');
 
 
         $client = new Client(
@@ -87,7 +59,7 @@ final class Download implements ModelInterface
                 RequestOptions::IDN_CONVERSION => true
             ]
         );
-        $response = $client->get($this->request->getParsedBody()['image'] ?? null);
+        $response = $client->get($request->getParsedBody()['image'] ?? null);
         $data = $response->getBody()->getContents();
         $extension = $this->getExt($response->getHeaderLine('Content-Type'));
         $targetPath = $this->getUploadSubDir() . '/' . $this->getNewFilename() . '.' . $extension;
@@ -101,7 +73,7 @@ final class Download implements ModelInterface
             $targetPath,
             $hash
         );
-        $imageDto->storage = $this->config->getModuleConfig()->get('uploadStorage');
+        $imageDto->storage = $this->config->get('uploadStorage');
 
         try {
             new WriteImage($this->em, $imageDto);
@@ -115,12 +87,10 @@ final class Download implements ModelInterface
                 $filesystem
             );
             $this->em->flush();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $filesystem->delete($targetPath);
             throw $e;
         }
-
-        Redirect::http($this->urlGenerator->generate('admin/gallery'));
     }
 
     private function getExt($content_type)

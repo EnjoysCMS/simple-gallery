@@ -16,26 +16,27 @@ use EnjoysCMS\Module\SimpleGallery\Config;
 use League\Flysystem\FilesystemException;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UploadedFileInterface;
+use RuntimeException;
+use Throwable;
 
 final class UploadHandler
 {
     public function __construct(
-        private ServerRequestInterface $request,
-        private EntityManager $em,
-        private Config $config
+        private readonly EntityManager $em,
+        private readonly Config $config
     ) {
     }
 
     /**
      * @throws OptimisticLockException
-     * @throws \Throwable
+     * @throws Throwable
      * @throws \Doctrine\ORM\ORMException
      * @throws FilesystemException
      */
-    public function upload(): void
+    public function upload(ServerRequestInterface $request): void
     {
         /** @var UploadedFileInterface|UploadedFileInterface[] $file */
-        $file = $this->request->getUploadedFiles()['image'] ?? null;
+        $file = $request->getUploadedFiles()['image'] ?? null;
 
         if (is_array($file)) {
             foreach ($file as $item) {
@@ -49,7 +50,7 @@ final class UploadHandler
 
     /**
      * @throws OptimisticLockException
-     * @throws \Throwable
+     * @throws Throwable
      * @throws \Doctrine\ORM\ORMException
      * @throws ORMException
      * @throws FilesystemException
@@ -59,14 +60,14 @@ final class UploadHandler
         $storage = $this->config->getStorageUpload();
         $filesystem = $storage->getFileSystem();
         /** @var class-string<ThumbnailServiceInterface> $thumbnailService */
-        $thumbnailService = $this->config->getModuleConfig()->get('thumbnailService');
+        $thumbnailService = $this->config->get('thumbnailService');
 
         $sizeRule = new Size();
-        $sizeRule->setMaxSize($this->config->getModuleConfig()->get('uploadRules')['maxSize'] ?? 1024 * 1024);
+        $sizeRule->setMaxSize($this->config->get('uploadRules->maxSize') ?? 1024 * 1024);
 
         $extensionRule = new Extension();
         $extensionRule->allow(
-            $this->config->getModuleConfig()->get('uploadRules')['allowedExtensions'] ?? 'jpg, png, jpeg'
+            $this->config->get('uploadRules->allowedExtensions') ?? 'jpg, png, jpeg'
         );
 
         $file = new UploadProcessing($uploadedFile, $filesystem);
@@ -92,7 +93,7 @@ final class UploadHandler
                 $file->getFileInfo()->getOriginalFilename(),
                 $file->getFileInfo()->getExtensionWithDot()
             );
-            $imageDto->storage = $this->config->getModuleConfig()->get('uploadStorage');
+            $imageDto->storage = $this->config->get('uploadStorage');
 
             new WriteImage($this->em, $imageDto);
 
@@ -107,7 +108,7 @@ final class UploadHandler
             );
 
             $this->em->flush();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             if (null !== $location = $file->getTargetPath()) {
                 $filesystem->delete($location);
             }
@@ -138,8 +139,8 @@ final class UploadHandler
                 )) * 1.65
         );
         if (function_exists('memory_get_usage') && memory_get_usage() + $memoryNeeded > $memoryLimit) {
-            if (!$this->config->getModuleConfig()->get('allocatedMemoryDynamically')) {
-                throw new \RuntimeException(
+            if (!$this->config->get('allocatedMemoryDynamically')) {
+                throw new RuntimeException(
                     sprintf(
                         'The allocated memory (%s MiB) is not enough for image processing. Needed: %s MiB',
                         $memoryLimit / pow(1024, 2),

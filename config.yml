@@ -8,7 +8,7 @@ storageList:
       publicUrl: /upload/gallery
       permissionMap:
         dir:
-          private: 0755
+          private: 0o755
 
 uploadRules:
   maxSize: 3145728

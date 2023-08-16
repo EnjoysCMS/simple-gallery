@@ -4,170 +4,283 @@ declare(strict_types=1);
 
 namespace EnjoysCMS\Module\SimpleGallery\Controller;
 
-use EnjoysCMS\Module\Admin\AdminBaseController;
+use DI\Container;
+use DI\DependencyException;
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Exception\NotSupported;
+use Doctrine\ORM\Tools\Pagination\Paginator;
+use Enjoys\Forms\Elements\File;
+use Enjoys\Forms\Exception\ExceptionRule;
+use EnjoysCMS\Core\Exception\NotFoundException;
+use EnjoysCMS\Core\Pagination\Pagination;
+use EnjoysCMS\Core\Routing\Annotation\Route;
+use EnjoysCMS\Module\Admin\AdminController;
 use EnjoysCMS\Module\SimpleGallery\Admin\Delete;
 use EnjoysCMS\Module\SimpleGallery\Admin\Download;
-use EnjoysCMS\Module\SimpleGallery\Admin\Index;
 use EnjoysCMS\Module\SimpleGallery\Admin\UpdateDescription;
 use EnjoysCMS\Module\SimpleGallery\Admin\UpdateTitle;
-use EnjoysCMS\Module\SimpleGallery\Admin\Upload;
-use EnjoysCMS\Module\SimpleGallery\Admin\UploadDropzone;
+use EnjoysCMS\Module\SimpleGallery\Admin\UploadForm;
 use EnjoysCMS\Module\SimpleGallery\Admin\UploadHandler;
+use EnjoysCMS\Module\SimpleGallery\Config;
+use EnjoysCMS\Module\SimpleGallery\Entities\Image;
 use Exception;
-use Psr\Container\ContainerInterface;
+use InvalidArgumentException;
+use League\Flysystem\FilesystemException;
 use Psr\Http\Message\ResponseInterface;
-use Symfony\Component\Routing\Annotation\Route;
+use Throwable;
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
+use Twig\Error\SyntaxError;
 
-final class Admin extends AdminBaseController
+#[Route('/admin/gallery', '@gallery_')]
+final class Admin extends AdminController
 {
-    public function __construct(private ContainerInterface $container)
+    public function __construct(Container $container)
     {
-        parent::__construct($this->container);
-        $this->getTwig()->getLoader()->addPath(__DIR__ . '/../../template', 'simple-gallery');
+        parent::__construct($container);
+        $this->twig->getLoader()->addPath(__DIR__ . '/../../template', 'simple-gallery');
     }
 
+    /**
+     * @throws SyntaxError
+     * @throws RuntimeError
+     * @throws LoaderError
+     * @throws NotFoundException
+     * @throws NotSupported
+     */
     #[Route(
-        path: '/admin/gallery@{page}',
-        name: 'admin/gallery',
+        path: '@{page}',
+        name: 'index',
         requirements: [
             'page' => '\d+'
         ],
-        options: [
-            'aclComment' => '[Admin][Simple Gallery] Просмотр всех изображений'
-        ],
         defaults: [
             'page' => 1,
-        ]
+        ],
+        comment: 'Просмотр всех изображений'
     )]
-    public function index(): ResponseInterface
+    public function index(Config $config, EntityManager $em): ResponseInterface
     {
-        return $this->responseText(
-            $this->view(
+        $repository = $em->getRepository(Image::class);
+
+        $pagination = new Pagination(
+            $this->request->getAttribute('page', 1),
+            $config->get('perPageLimit', 12)
+        );
+        $paginator = new Paginator(
+            $repository->getOffsetItemsQueryBuilder(
+                $pagination,
+                $config->get('order->0', 'id'),
+                $config->get('order->1', 'asc')
+            )
+        );
+        $pagination->setTotalItems($paginator->count());
+
+        return $this->response(
+            $this->twig->render(
                 '@simple-gallery/admin/index.twig',
-                $this->getContext($this->container->get(Index::class))
+                [
+                    'config' => $config,
+                    'images' => $paginator->getIterator(),
+                    'pagination' => $pagination,
+                ]
             )
         );
     }
 
+    /**
+     * @throws SyntaxError
+     * @throws ExceptionRule
+     * @throws RuntimeError
+     * @throws LoaderError
+     */
     #[Route(
-        path: '/admin/gallery/upload',
-        name: 'admin/gallery/upload',
-        options: [
-            'aclComment' => '[Admin][Simple Gallery] Загрузка изображений'
-        ]
+        path: '/upload',
+        name: 'upload',
+        comment: 'Загрузка изображений'
     )]
-    public function upload(): ResponseInterface
-    {
-        return $this->responseText(
-            $this->view(
+    public function upload(
+        UploadForm $uploadForm,
+        UploadHandler $uploadHandler,
+        \EnjoysCMS\Module\Admin\Config $adminConfig,
+        Config $config,
+    ): ResponseInterface {
+        $form = $uploadForm->getForm();
+
+        if ($form->isSubmitted()) {
+            try {
+                $uploadHandler->upload($this->request);
+                return $this->redirect->toRoute('@gallery_index');
+            } catch (Throwable $e) {
+                /** @var File $image */
+                $image = $form->getElement('image[]');
+                $image->setRuleError(htmlspecialchars(sprintf('%s: %s', get_class($e), $e->getMessage())));
+            }
+        }
+
+        $rendererForm = $adminConfig->getRendererForm($form);
+
+        return $this->response(
+            $this->twig->render(
                 '@simple-gallery/admin/upload.twig',
-                $this->getContext($this->container->get(Upload::class))
+                [
+                    'form' => $rendererForm->output()
+                ]
             )
         );
     }
 
     #[Route(
-        path: '/admin/gallery/upload-dropzone',
-        name: 'admin/gallery/upload-dropzone',
-        options: [
-            'aclComment' => '[Admin][Simple Gallery] Загрузка изображений с помощью dropzone.js'
-        ]
+        path: '/upload-dropzone',
+        name: 'upload-dropzone',
+        comment: 'Загрузка изображений с помощью dropzone.js'
     )]
     public function uploadDropzone(UploadHandler $uploadHandler): ResponseInterface
     {
         try {
-            $uploadHandler->upload();
-        } catch (\Throwable $e) {
-            $this->response = $this->response->withStatus(500);
+            $uploadHandler->upload($this->request);
+        } catch (Throwable $e) {
             $errorMessage = htmlspecialchars(sprintf('%s: %s', get_class($e), $e->getMessage()));
+            $code = 500;
         }
-        return $this->responseJson($errorMessage ?? 'uploaded');
+        return $this->json($errorMessage ?? 'uploaded', $code ?? 200);
     }
 
+
+    /**
+     * @throws SyntaxError
+     * @throws ExceptionRule
+     * @throws \DI\NotFoundException
+     * @throws RuntimeError
+     * @throws LoaderError
+     * @throws DependencyException
+     * @throws FilesystemException
+     */
     #[Route(
-        path: '/admin/gallery/download',
-        name: 'admin/gallery/download',
-        options: [
-            'aclComment' => '[Admin][Simple Gallery] Загрузка изображений из интернета'
-        ]
+        path: '/download',
+        name: 'download',
+        comment: 'Загрузка изображений из интернета'
     )]
-    public function download(): ResponseInterface
-    {
-        return $this->responseText(
-            $this->view(
+    public function download(
+        Download $download,
+        \EnjoysCMS\Module\Admin\Config $adminConfig,
+    ): ResponseInterface {
+        $form = $download->getForm();
+
+        if ($form->isSubmitted()) {
+            try {
+                $download->doAction($this->request);
+                return $this->redirect->toRoute('@gallery_index');
+            } catch (Exception $e) {
+                /** @var File $image */
+                $image = $form->getElement('image');
+                $image->setRuleError(htmlspecialchars(sprintf('%s: %s', get_class($e), $e->getMessage())));
+            }
+        }
+
+        $rendererForm = $adminConfig->getRendererForm($form);
+
+        return $this->response(
+            $this->twig->render(
                 '@simple-gallery/admin/upload.twig',
-                $this->getContext($this->container->get(Download::class))
+                [
+                    'form' => $rendererForm->output()
+                ]
             )
         );
     }
 
+    /**
+     * @throws DependencyException
+     * @throws FilesystemException
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
+     * @throws \DI\NotFoundException
+     */
     #[Route(
-        path: '/admin/gallery/delete',
-        name: 'admin/gallery/delete',
-        options: [
-            'aclComment' => '[Admin][Simple Gallery] Удаление изображений'
-        ]
+        path: '/delete',
+        name: 'delete',
+        comment: 'Удаление изображений'
     )]
-    public function delete(): ResponseInterface
-    {
-        return $this->responseText(
-            $this->view(
+    public function delete(
+        Delete $delete,
+        \EnjoysCMS\Module\Admin\Config $adminConfig,
+        Config $config,
+    ): ResponseInterface {
+        $form = $delete->getForm();
+
+        if ($form->isSubmitted()) {
+            try {
+                $delete->doAction();
+                return $this->redirect->toRoute('@gallery_index');
+            } catch (Exception $e) {
+                /** @var File $image */
+                $image = $form->getElement('image');
+                $image->setRuleError($e->getMessage());
+            }
+        }
+
+        $rendererForm = $adminConfig->getRendererForm($form);
+
+        return $this->response(
+            $this->twig->render(
                 '@simple-gallery/admin/delete.twig',
-                $this->getContext($this->container->get(Delete::class))
+                [
+                    'form' => $rendererForm->output(),
+                    'image' => $delete->getImage(),
+                    'config' => $config,
+                ]
             )
         );
     }
 
     #[Route(
-        path: '/admin/gallery/update-description',
-        name: 'admin/gallery/updateDescription',
-        options: [
-            'aclComment' => '[Admin][Simple Gallery] Установка описания для изображений'
-        ]
+        path: '/update-description',
+        name: 'update_description',
+        comment: 'Установка описания для изображений'
     )]
-    public function updateDescription(): ResponseInterface
+    public function updateDescription(EntityManager $em): ResponseInterface
     {
         try {
-            $this->container->get(UpdateDescription::class)->update();
+            $data = json_decode($this->request->getBody()->getContents());
+            $image = $em->getRepository(Image::class)->find($data->id) ?? throw new InvalidArgumentException(
+                'Не правильный id изображения'
+            );
+
+            $image->setDescription(trim($data->comment));
+            $em->flush();
             $result = 'ok';
-            $code = 200;
         } catch (Exception $e) {
             $code = 500;
             $result = $e->getMessage();
         } finally {
-            $this->response =
-                $this->response
-                    ->withStatus($code)
-            ;
-
-            return $this->responseJson($result);
+            return $this->json($result, $code ?? 200);
         }
     }
 
 
     #[Route(
-        path: '/admin/gallery/update-title',
-        name: 'admin/gallery/updateTitle',
-        options: [
-            'aclComment' => '[Admin][Simple Gallery] Установка заголовка для изображений'
-        ]
+        path: '/update-title',
+        name: 'update_title',
+        comment: 'Установка заголовка для изображений'
     )]
-    public function updateTitle(): ResponseInterface
+    public function updateTitle(EntityManager $em): ResponseInterface
     {
         try {
-            $this->container->get(UpdateTitle::class)->update();
+            $data = json_decode($this->request->getBody()->getContents());
+            $image = $em->getRepository(Image::class)->find($data->id) ?? throw new InvalidArgumentException(
+                'Не правильный id изображения'
+            );
+
+            $image->setTitle(trim($data->comment));
+            $em->flush();
             $result = 'ok';
-            $code = 200;
         } catch (Exception $e) {
             $code = 500;
             $result = $e->getMessage();
         } finally {
-            $this->response =
-                $this->response
-                    ->withStatus($code)
-            ;
-
-            return $this->responseJson($result);
+            return $this->json($result, $code ?? 200);
         }
     }
 }

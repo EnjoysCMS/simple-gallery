@@ -7,11 +7,15 @@ namespace EnjoysCMS\Module\SimpleGallery\Admin;
 
 
 use Intervention\Image\ImageManagerStatic;
+use League\Flysystem\FilesystemException;
 use League\Flysystem\FilesystemOperator;
 
 final class Thumbnail implements ThumbnailServiceInterface
 {
-    public static function create(string $thumbFilename, string $content, FilesystemOperator $filesystem)
+    /**
+     * @throws FilesystemException
+     */
+    public static function create(string $thumbFilename, string $content, FilesystemOperator $filesystem): void
     {
         $image = ImageManagerStatic::make($content);
         $image->resize(

@@ -7,79 +7,53 @@ namespace EnjoysCMS\Module\SimpleGallery\Admin;
 
 
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Exception\NotSupported;
+use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\OptimisticLockException;
-use Doctrine\ORM\ORMException;
-use Enjoys\Forms\Elements\File;
 use Enjoys\Forms\Form;
-use Enjoys\Forms\Interfaces\RendererInterface;
-use EnjoysCMS\Core\Components\Helpers\Redirect;
-use EnjoysCMS\Module\Admin\Core\ModelInterface;
 use EnjoysCMS\Module\SimpleGallery\Config;
 use EnjoysCMS\Module\SimpleGallery\Entities\Image;
+use InvalidArgumentException;
+use League\Flysystem\FilesystemException;
 use Psr\Http\Message\ServerRequestInterface;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use TypeError;
 
-final class Delete implements ModelInterface
+final class Delete
 {
 
     private Image $image;
 
+    /**
+     * @throws NotSupported
+     */
     public function __construct(
-        private EntityManager $entityManager,
-        private ServerRequestInterface $request,
-        private RendererInterface $renderer,
-        private UrlGeneratorInterface $urlGenerator,
-        private Config $config
+        private readonly EntityManager $em,
+        private readonly ServerRequestInterface $request,
+        private readonly Config $config
     ) {
-        $image = $this->entityManager->getRepository(Image::class)->findOneBy(
+        $this->image = $this->em->getRepository(Image::class)->findOneBy(
             ['id' => $this->request->getQueryParams()['id'] ?? 0]
-        );
-        if ($image === null) {
-            throw new \InvalidArgumentException('Нет изображения с таким id');
-        }
-
-        $this->image = $image;
+        ) ?? throw new InvalidArgumentException('Нет изображения с таким id');
     }
 
-    public function getContext(): array
-    {
-        $form = $this->getForm();
 
-        if ($form->isSubmitted()) {
-            try {
-                $this->doAction();
-            } catch (\Exception $e) {
-                /** @var File $image */
-                $image = $form->getElement('image');
-                $image->setRuleError($e->getMessage());
-            }
-        }
-
-        $this->renderer->setForm($form);
-
-        return [
-            'form' => $this->renderer->output(),
-            'image' => $this->image,
-            'config' => $this->config,
-        ];
-    }
-
-    private function getForm(): Form
+    public function getForm(): Form
     {
         $form = new Form();
-        $form->setMethod('post');
         $form->submit('delete', 'Удалить');
         return $form;
     }
 
+
     /**
      * @throws OptimisticLockException
      * @throws ORMException
+     * @throws FilesystemException
      */
-    private function doAction()
+    public function doAction(): void
     {
-        $this->entityManager->remove($this->image);
-        $this->entityManager->flush();
+        $this->em->remove($this->image);
+        $this->em->flush();
 
         $storage = $this->config->getStorageUpload($this->image->getStorage());
         $filesystem = $storage->getFileSystem();
@@ -93,10 +67,12 @@ final class Delete implements ModelInterface
                     $this->image->getFilename()
                 )
             );
-        } catch (\TypeError) {
+        } catch (TypeError) {
         }
+    }
 
-
-        Redirect::http($this->urlGenerator->generate('admin/gallery'));
+    public function getImage(): Image
+    {
+        return $this->image;
     }
 }
