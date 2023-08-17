@@ -84,10 +84,12 @@ class ViewPhoto extends AbstractBlock
                 json_encode($this->getBlockOptions())
             )
         );
+
         $result = $cache->get($cacheId, function (ItemInterface $item): mixed {
-            $item->expiresAfter($this->getBlockOptions()->getValue('cacheTime') ?? 0);
+            $item->expiresAfter((int)($this->getBlockOptions()->getValue('cacheTime') ?? 0));
             return $this->getImages($this->em->getRepository(Image::class));
         });
+
 
         return $this->twig->render(
             $template,
