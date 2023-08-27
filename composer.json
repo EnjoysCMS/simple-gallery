@@ -31,7 +31,7 @@
         }
     },
     "scripts": {
-        "assets-install": "EnjoysCMS\\Module\\SimpleGallery\\Composer::assetsInstall",
+        "assets-install": "EnjoysCMS\\Module\\SimpleGallery\\Assets::install",
         "post-install-cmd": "@assets-install",
         "post-update-cmd": "@assets-install"
     }
