@@ -5,7 +5,8 @@
     "type": "enjoyscms-module",
     "autoload": {
         "psr-4": {
-            "EnjoysCMS\\Module\\SimpleGallery\\": "src/"
+            "EnjoysCMS\\Module\\SimpleGallery\\": "src/",
+            "EnjoysCMS\\Module\\SimpleGallery\\Composer\\Scripts\\": "scripts/"
         }
     },
     "authors": [
@@ -31,8 +32,14 @@
         }
     },
     "scripts": {
-        "assets-install": "EnjoysCMS\\Module\\SimpleGallery\\Assets::install",
-        "post-install-cmd": "@assets-install",
-        "post-update-cmd": "@assets-install"
+        "simple-gallery-assets-install": "EnjoysCMS\\Module\\SimpleGallery\\Composer\\Scripts\\AssetsInstallCommand",
+        "post-install-cmd": [
+            "@print-module-name SimpleGallery",
+            "@simple-gallery-assets-install"
+        ],
+        "post-update-cmd": [
+            "@print-module-name SimpleGallery",
+            "@simple-gallery-assets-install"
+        ]
     }
 }
