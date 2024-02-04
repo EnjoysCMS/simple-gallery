@@ -41,5 +41,8 @@
             "@print-module-name SimpleGallery",
             "@simple-gallery-assets-install"
         ]
+    },
+    "require-dev": {
+        "rector/rector": "^0.19.6"
     }
 }
