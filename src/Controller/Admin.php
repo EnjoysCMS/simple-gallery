@@ -17,13 +17,13 @@ use EnjoysCMS\Core\Routing\Annotation\Route;
 use EnjoysCMS\Module\Admin\AdminController;
 use EnjoysCMS\Module\SimpleGallery\Admin\Delete;
 use EnjoysCMS\Module\SimpleGallery\Admin\Download;
-use EnjoysCMS\Module\SimpleGallery\Admin\UpdateDescription;
-use EnjoysCMS\Module\SimpleGallery\Admin\UpdateTitle;
 use EnjoysCMS\Module\SimpleGallery\Admin\UploadForm;
 use EnjoysCMS\Module\SimpleGallery\Admin\UploadHandler;
 use EnjoysCMS\Module\SimpleGallery\Config;
 use EnjoysCMS\Module\SimpleGallery\Entities\Image;
+use EnjoysCMS\Module\SimpleGallery\Entities\ImageRepository;
 use Exception;
+use GuzzleHttp\Exception\GuzzleException;
 use InvalidArgumentException;
 use League\Flysystem\FilesystemException;
 use Psr\Http\Message\ResponseInterface;
@@ -38,6 +38,7 @@ final class Admin extends AdminController
     public function __construct(Container $container)
     {
         parent::__construct($container);
+        /** @psalm-suppress  UndefinedInterfaceMethod, MixedMethodCall */
         $this->twig->getLoader()->addPath(__DIR__ . '/../../template', 'simple-gallery');
     }
 
@@ -61,6 +62,7 @@ final class Admin extends AdminController
     )]
     public function index(Config $config, EntityManager $em): ResponseInterface
     {
+        /** @var ImageRepository $repository */
         $repository = $em->getRepository(Image::class);
 
         $pagination = new Pagination(
@@ -70,8 +72,8 @@ final class Admin extends AdminController
         $paginator = new Paginator(
             $repository->getOffsetItemsQueryBuilder(
                 $pagination,
-                $config->get('order->0', 'id'),
-                $config->get('order->1', 'asc')
+                (string)$config->get('order->0', 'id'),
+                (string)$config->get('order->1', 'asc')
             )
         );
         $pagination->setTotalItems($paginator->count());
@@ -89,10 +91,12 @@ final class Admin extends AdminController
     }
 
     /**
-     * @throws SyntaxError
+     * @throws DependencyException
      * @throws ExceptionRule
-     * @throws RuntimeError
      * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
+     * @throws \DI\NotFoundException
      */
     #[Route(
         path: '/upload',
@@ -137,6 +141,7 @@ final class Admin extends AdminController
     )]
     public function uploadDropzone(UploadHandler $uploadHandler): ResponseInterface
     {
+        $code = null;
         try {
             $uploadHandler->upload($this->request);
         } catch (Throwable $e) {
@@ -155,6 +160,7 @@ final class Admin extends AdminController
      * @throws LoaderError
      * @throws DependencyException
      * @throws FilesystemException
+     * @throws GuzzleException
      */
     #[Route(
         path: '/download',
@@ -235,6 +241,9 @@ final class Admin extends AdminController
         );
     }
 
+    /**
+     * @psalm-suppress MixedArgument, MixedPropertyFetch, MixedAssignment
+     */
     #[Route(
         path: '/update-description',
         name: 'update_description',
@@ -242,6 +251,8 @@ final class Admin extends AdminController
     )]
     public function updateDescription(EntityManager $em): ResponseInterface
     {
+        $code = 200;
+        $result = 'ok';
         try {
             $data = json_decode($this->request->getBody()->getContents());
             $image = $em->getRepository(Image::class)->find($data->id) ?? throw new InvalidArgumentException(
@@ -250,16 +261,18 @@ final class Admin extends AdminController
 
             $image->setDescription(trim($data->comment));
             $em->flush();
-            $result = 'ok';
         } catch (Exception $e) {
             $code = 500;
             $result = $e->getMessage();
         } finally {
-            return $this->json($result, $code ?? 200);
+            return $this->json($result, $code);
         }
     }
 
 
+    /**
+     * @psalm-suppress MixedArgument, MixedPropertyFetch, MixedAssignment
+     */
     #[Route(
         path: '/update-title',
         name: 'update_title',
@@ -267,20 +280,20 @@ final class Admin extends AdminController
     )]
     public function updateTitle(EntityManager $em): ResponseInterface
     {
+        $code = 200;
+        $result = 'ok';
         try {
             $data = json_decode($this->request->getBody()->getContents());
             $image = $em->getRepository(Image::class)->find($data->id) ?? throw new InvalidArgumentException(
                 'Не правильный id изображения'
             );
-
             $image->setTitle(trim($data->comment));
             $em->flush();
-            $result = 'ok';
         } catch (Exception $e) {
             $code = 500;
             $result = $e->getMessage();
         } finally {
-            return $this->json($result, $code ?? 200);
+            return $this->json($result, $code);
         }
     }
 }

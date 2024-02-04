@@ -63,11 +63,13 @@ final class UploadHandler
         $thumbnailService = $this->config->get('thumbnailService');
 
         $sizeRule = new Size();
-        $sizeRule->setMaxSize($this->config->get('uploadRules->maxSize') ?? 1024 * 1024);
+        $sizeRule->setMaxSize((int)($this->config->get('uploadRules->maxSize') ?? 1024 * 1024));
 
         $extensionRule = new Extension();
+        /** @var string[]|string|null $allowedExtensions */
+        $allowedExtensions = $this->config->get('uploadRules->allowedExtensions');
         $extensionRule->allow(
-            $this->config->get('uploadRules->allowedExtensions') ?? 'jpg, png, jpeg'
+            $allowedExtensions ?? 'jpg, png, jpeg'
         );
 
         $file = new UploadProcessing($uploadedFile, $filesystem);
@@ -79,21 +81,25 @@ final class UploadHandler
 
             $file->upload($this->getUploadSubDir());
 
-            $fileContent = $filesystem->read($file->getTargetPath());
+            $targetPath = $file->getTargetPath() ?? throw new \RuntimeException('$targetPath not set');
+
+            $fileContent = $filesystem->read($targetPath);
 
             $this->checkMemory($fileContent);
 
             $hash = md5($fileContent);
 
             $imageDto = new ImageDto(
-                $file->getTargetPath(),
+                $targetPath,
                 $hash
             );
             $imageDto->title = rtrim(
                 $file->getFileInfo()->getOriginalFilename(),
                 $file->getFileInfo()->getExtensionWithDot()
             );
-            $imageDto->storage = $this->config->get('uploadStorage');
+            $imageDto->storage = (string)($this->config->get('uploadStorage') ?? throw new \RuntimeException(
+                'config->uploadStorage not set'
+            ));
 
             new WriteImage($this->em, $imageDto);
 
@@ -101,7 +107,7 @@ final class UploadHandler
                 str_replace(
                     '.',
                     '_thumb.',
-                    $file->getTargetPath()
+                    $targetPath
                 ),
                 $fileContent,
                 $filesystem
@@ -109,10 +115,7 @@ final class UploadHandler
 
             $this->em->flush();
         } catch (Throwable $e) {
-            if (null !== $location = $file->getTargetPath()) {
-                $filesystem->delete($location);
-            }
-
+            $filesystem->delete($file->getTargetPath() ?? throw $e);
             throw $e;
         }
     }
@@ -123,7 +126,7 @@ final class UploadHandler
         return date('Y') . '/' . date('m');
     }
 
-    private function getNewFilename(): ?string
+    private function getNewFilename(): string
     {
         return uniqid('image');
     }

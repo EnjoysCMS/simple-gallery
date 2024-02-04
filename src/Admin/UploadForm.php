@@ -25,9 +25,11 @@ final class UploadForm
      */
     public function getForm(): Form
     {
+        /** @var string[]|null $allowedExtensions */
+        $allowedExtensions = $this->config->get('uploadRules->allowedExtensions') ;
         $extensionWithoutDot = implode(
             ', ',
-            (array)($this->config->get('uploadRules->allowedExtensions') ?? ['jpg', 'png', 'jpeg'])
+            $allowedExtensions ?? ['jpg', 'png', 'jpeg']
         );
         $extensionWithDot = implode(
             ', ',

@@ -10,5 +10,5 @@ use League\Flysystem\FilesystemOperator;
 
 interface ThumbnailServiceInterface
 {
-    public static function create(string $thumbFilename, string $content, FilesystemOperator $filesystem);
+    public static function create(string $thumbFilename, string $content, FilesystemOperator $filesystem): void;
 }

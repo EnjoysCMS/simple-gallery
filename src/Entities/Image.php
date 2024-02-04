@@ -6,6 +6,9 @@ namespace EnjoysCMS\Module\SimpleGallery\Entities;
 
 use Doctrine\ORM\Mapping as ORM;
 
+/**
+ * @psalm-suppress MissingConstructor
+ */
 #[ORM\Table(name: 'gallery_images')]
 #[ORM\Entity(repositoryClass: ImageRepository::class)]
 final class Image
@@ -58,8 +61,8 @@ final class Image
 
     public function setDescription(?string $description): void
     {
-        $description = empty($description) ? null : mb_substr($description, 0, 255);
-        $this->description = $description;
+        $description = strlen($description ?? '') === 0 ? null : $description;
+        $this->description = $description === null ? null : mb_substr($description, 0, 255);
     }
 
 
@@ -79,8 +82,8 @@ final class Image
 
     public function setTitle(?string $title): void
     {
-        $title = empty($title) ? null : mb_substr($title, 0, 50);
-        $this->title = $title;
+        $title = strlen($title ?? '') === 0 ? null : $title;
+        $this->title = $title === null ? null : mb_substr($title, 0, 50);
     }
 
     /**

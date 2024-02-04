@@ -8,6 +8,7 @@ namespace EnjoysCMS\Module\SimpleGallery\Controller;
 use DI\Container;
 use DI\DependencyException;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Exception\NotSupported;
 use Doctrine\ORM\Tools\Pagination\Paginator;
@@ -30,20 +31,20 @@ use Twig\Error\SyntaxError;
 final class ViewGallery extends AbstractController
 {
 
-    private ImageRepository|ObjectRepository|EntityRepository $repository;
+
+    private ImageRepository $repository;
 
     /**
-     * @throws NotSupported
      * @throws DependencyException
      * @throws \DI\NotFoundException
+     * @psalm-suppress MixedMethodCall, MixedAssignment
      */
     public function __construct(
         Container $container,
-        private readonly EntityManager $em,
         private readonly Config $config,
     ) {
         parent::__construct($container);
-        $this->repository = $this->em->getRepository(Image::class);
+        $this->repository = $container->get(EntityManagerInterface::class)->getRepository(Image::class);
     }
 
     /**
@@ -71,11 +72,12 @@ final class ViewGallery extends AbstractController
             $this->config->get('perPageLimit', false)
         );
 
+        /** @var Paginator<Image> $paginator */
         $paginator = new Paginator(
             $this->repository->getOffsetItemsQueryBuilder(
                 $pagination,
-                $this->config->get('order->0', 'id'),
-                $this->config->get('order->1', 'asc')
+                (string)$this->config->get('order->0', 'id'),
+                (string)$this->config->get('order->1', 'asc')
             )
         );
         $pagination->setTotalItems($paginator->count());
@@ -90,7 +92,7 @@ final class ViewGallery extends AbstractController
             $twig->render($template_path, [
                 '_title' => sprintf(
                     'Фотогалерея [стр. %2$s] - %1$s',
-                    $this->setting->get('sitename'),
+                    (string)$this->setting->get('sitename'),
                     $pagination->getCurrentPage()
                 ),
                 'images' => $paginator->getIterator(),
@@ -121,12 +123,13 @@ final class ViewGallery extends AbstractController
             $this->config->get('perPageLimit', false)
         );
 
+        /** @var Paginator<Image> $paginator */
         $paginator = new Paginator($this->repository->getOffsetItemsQueryBuilder($pagination));
         $pagination->setTotalItems($paginator->count());
 
+        /** @psalm-suppress UndefinedInterfaceMethod, MixedArgument */
         return $this->json([
-            'images' => array_map(function ($image) {
-                /** @var Image $image */
+            'images' => array_map(function (Image $image): array {
                 return [
                     'id' => $image->getId(),
                     'src' => $this->config->getStorageUpload($image->getStorage())->getUrl($image->getFilename()),

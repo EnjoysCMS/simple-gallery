@@ -6,6 +6,7 @@ declare(strict_types=1);
 namespace EnjoysCMS\Module\SimpleGallery\Admin;
 
 
+use Intervention\Image\Constraint;
 use Intervention\Image\ImageManagerStatic;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\FilesystemOperator;
@@ -21,7 +22,7 @@ final class Thumbnail implements ThumbnailServiceInterface
         $image->resize(
             300,
             300,
-            function ($constraint) {
+            function (Constraint $constraint) {
                 $constraint->aspectRatio();
                 $constraint->upsize();
             }

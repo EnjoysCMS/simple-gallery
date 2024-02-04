@@ -20,8 +20,10 @@ final class Config extends AbstractModuleConfig
 
     public function getStorageUpload(string $key = null): StorageUploadInterface
     {
+        /** @var string $key */
         $key = $key ?? $this->get('uploadStorage');
 
+        /** @var array $config */
         $config = $this->get(sprintf('storageList->%s', $key)) ?? throw new RuntimeException(
             sprintf('Not set config `storageList->%s`', $key)
         );

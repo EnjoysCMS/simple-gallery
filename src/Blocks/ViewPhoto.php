@@ -8,11 +8,13 @@ namespace EnjoysCMS\Module\SimpleGallery\Blocks;
 
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Exception\NotSupported;
 use DoctrineExtensions\Query\Mysql\Rand;
 use EnjoysCMS\Core\Block\AbstractBlock;
 use EnjoysCMS\Core\Block\Annotation\Block;
 use EnjoysCMS\Module\SimpleGallery\Config;
 use EnjoysCMS\Module\SimpleGallery\Entities\Image;
+use EnjoysCMS\Module\SimpleGallery\Entities\ImageRepository;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -67,11 +69,16 @@ class ViewPhoto extends AbstractBlock
      * @throws LoaderError
      * @throws RuntimeError
      * @throws SyntaxError
+     * @throws NotSupported
      */
     public function view(): string
     {
+        /** @var string $template */
         $template = $this->getBlockOptions()->getValue('template');
         $this->em->getConfiguration()->addCustomStringFunction('RAND', Rand::class);
+
+        /** @var ImageRepository $repository */
+        $repository = $this->em->getRepository(Image::class);
 
         /** @var Environment $twig */
 
@@ -85,10 +92,20 @@ class ViewPhoto extends AbstractBlock
             )
         );
 
-        $result = $cache->get($cacheId, function (ItemInterface $item): mixed {
-            $item->expiresAfter((int)($this->getBlockOptions()->getValue('cacheTime') ?? 0));
-            return $this->getImages($this->em->getRepository(Image::class));
-        });
+
+        /** @var Image[] $result */
+        $result = $cache->get(
+        /**
+         * @param ItemInterface $item
+         * @return Image[]
+         * @throws NotSupported
+         */
+            $cacheId,
+            function (ItemInterface $item) use($repository) : array {
+                $item->expiresAfter((int)($this->getBlockOptions()->getValue('cacheTime') ?? 0));
+                return $this->getImages($repository);
+            }
+        );
 
 
         return $this->twig->render(
@@ -101,7 +118,11 @@ class ViewPhoto extends AbstractBlock
         );
     }
 
-    private function getImages(EntityRepository $repository): mixed
+    /**
+     * @return Image[]
+     * @psalm-suppress MixedReturnTypeCoercion
+     */
+    private function getImages(ImageRepository $repository): array
     {
         $qb = $repository->createQueryBuilder('i');
 
@@ -112,7 +133,7 @@ class ViewPhoto extends AbstractBlock
         };
 
         return $qb->getQuery()
-            ->setMaxResults($this->getBlockOptions()->getValue('cntItems') ?? 10)
+            ->setMaxResults((int)($this->getBlockOptions()->getValue('cntItems') ?? 10))
             ->getResult();
     }
 

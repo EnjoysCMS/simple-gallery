@@ -15,6 +15,7 @@ use Enjoys\Forms\Rules;
 use EnjoysCMS\Module\SimpleGallery\Config;
 use Exception;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\RequestOptions;
 use League\Flysystem\FilesystemException;
 use Psr\Http\Message\ServerRequestInterface;
@@ -45,11 +46,13 @@ final class Download
      * @throws ORMException
      * @throws \Doctrine\ORM\ORMException
      * @throws FilesystemException
+     * @throws GuzzleException
      */
     public function doAction(ServerRequestInterface $request): void
     {
         $storage = $this->config->getStorageUpload();
         $filesystem = $storage->getFileSystem();
+        /** @var class-string<ThumbnailServiceInterface> $thumbnailService */
         $thumbnailService = $this->config->get('thumbnailService');
 
 
@@ -59,10 +62,10 @@ final class Download
                 RequestOptions::IDN_CONVERSION => true
             ]
         );
-        $response = $client->get($request->getParsedBody()['image'] ?? null);
+        $response = $client->get((string)($request->getParsedBody()['image'] ?? null));
         $data = $response->getBody()->getContents();
         $extension = $this->getExt($response->getHeaderLine('Content-Type'));
-        $targetPath = $this->getUploadSubDir() . '/' . $this->getNewFilename() . '.' . $extension;
+        $targetPath = $this->getUploadSubDir() . '/' . $this->getNewFilename() . '.' . ($extension ?? '');
 
         $filesystem->write($targetPath, $data);
 
@@ -73,7 +76,7 @@ final class Download
             $targetPath,
             $hash
         );
-        $imageDto->storage = $this->config->get('uploadStorage');
+        $imageDto->storage = (string)$this->config->get('uploadStorage');
 
         try {
             new WriteImage($this->em, $imageDto);
@@ -93,7 +96,7 @@ final class Download
         }
     }
 
-    private function getExt($content_type)
+    private function getExt(string $content_type): ?string
     {
         $mime_types = array(
             // images
@@ -119,7 +122,7 @@ final class Download
         return date('Y') . '/' . date('m');
     }
 
-    private function getNewFilename(): ?string
+    private function getNewFilename(): string
     {
         return uniqid('image');
     }
