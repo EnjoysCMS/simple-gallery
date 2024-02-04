@@ -6,17 +6,13 @@ namespace EnjoysCMS\Module\SimpleGallery\Entities;
 
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass="ImageRepository")
- * @ORM\Table(name="gallery_images")
- */
+#[ORM\Table(name: 'gallery_images')]
+#[ORM\Entity(repositoryClass: ImageRepository::class)]
 final class Image
 {
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue(strategy="AUTO")
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue(strategy: 'AUTO')]
+    #[ORM\Column(type: 'integer')]
     private int $id;
 
     public function getId(): int
@@ -25,9 +21,7 @@ final class Image
     }
 
 
-    /**
-     * @ORM\Column(type="string", unique=true)
-     */
+    #[ORM\Column(type: 'string', unique: true)]
     private string $hash;
 
     public function getHash(): string
@@ -40,9 +34,7 @@ final class Image
         $this->hash = $hash;
     }
 
-    /**
-     * @ORM\Column(type="string")
-     */
+    #[ORM\Column(type: 'string')]
     private string $filename;
 
     public function getFilename(): string
@@ -55,9 +47,7 @@ final class Image
         $this->filename = $filename;
     }
 
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $description = null;
 
 
@@ -78,9 +68,7 @@ final class Image
         return pathinfo($this->getFileName(), PATHINFO_EXTENSION);
     }
 
-    /**
-     * @ORM\Column(type="string", length=50, nullable=true)
-     */
+    #[ORM\Column(type: 'string', length: 50, nullable: true)]
     private ?string $title = null;
 
 
@@ -97,8 +85,8 @@ final class Image
 
     /**
      * @var string
-     * @ORM\Column(type="string", length=50, options={"default": "local"})
      */
+    #[ORM\Column(type: 'string', length: 50, options: ['default' => 'local'])]
     private string $storage;
 
     public function getStorage(): string
