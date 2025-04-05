@@ -18,7 +18,7 @@ final class Config extends AbstractModuleConfig
         return 'enjoyscms/simple-gallery';
     }
 
-    public function getStorageUpload(string $key = null): StorageUploadInterface
+    public function getStorageUpload(?string $key = null): StorageUploadInterface
     {
         /** @var string $key */
         $key = $key ?? $this->get('uploadStorage');

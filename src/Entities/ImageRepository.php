@@ -13,9 +13,9 @@ use EnjoysCMS\Core\Pagination\Pagination;
 
 /**
  * @method Image|null find($id, $lockMode = null, $lockVersion = null)
- * @method Image|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Image|null findOneBy(array $criteria, ?array $orderBy = null)
  * @method list<Image> findAll()
- * @method list<Image> findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method list<Image> findBy(array $criteria, ?array $orderBy = null, $limit = null, $offset = null)
  * @extends  EntityRepository<Image>
  */
 final class ImageRepository extends EntityRepository

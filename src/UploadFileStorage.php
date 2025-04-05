@@ -8,7 +8,7 @@ use Psr\Http\Message\UploadedFileInterface;
 
 interface UploadFileStorage
 {
-    public function upload(UploadedFileInterface $file, string $newFilename = null): void;
+    public function upload(UploadedFileInterface $file, ?string $newFilename = null): void;
 
     public function getFilename(): ?string;
 
