@@ -1,0 +1,5 @@
+{
+    "cmd": {
+        "Assets install": ["yarn", "install"]
+    }
+}
