@@ -1,5 +1,8 @@
 {
     "cmd": {
         "Assets install": ["yarn", "install"]
+    },
+    "symlink": {
+        "node_modules": "/modules/simple-gallery/node_modules"
     }
 }
